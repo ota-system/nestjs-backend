@@ -1,21 +1,46 @@
+import * as path from "node:path"; // Dùng node:path cho chuẩn Biome/Node
 import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { HeaderResolver, I18nModule, QueryResolver } from "nestjs-i18n";
+
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { UserModule } from "./features/user/user.module";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { ConfigModule, ConfigService } from "@nestjs/config";
-import { SharedModule } from "./shared/shared.module";
 import { getTypeOrmConfig } from "./shared/configs/type-orm.config";
+import { SharedModule } from "./shared/shared.module";
 
 @Module({
 	imports: [
-		ConfigModule.forRoot(),
-		UserModule,
+		ConfigModule.forRoot({
+			isGlobal: true,
+		}),
+
+		// 1. I18n Module
+		I18nModule.forRootAsync({
+			useFactory: (configService: ConfigService) => ({
+				fallbackLanguage: "vi",
+				loaderOptions: {
+					path: path.join(__dirname, "i18n"),
+					watch: true,
+				},
+			}),
+			resolvers: [
+				new QueryResolver(["lang", "l"]), //1st priority: check query parameters
+				new HeaderResolver(["x-lang"]), //2nd priority: check custom header
+			],
+			inject: [ConfigService],
+		}),
+
+		// 2. Database Module
 		TypeOrmModule.forRootAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
-			useFactory: getTypeOrmConfig
+			useFactory: getTypeOrmConfig,
 		}),
+
+		// 3. Other
+		UserModule,
 		SharedModule,
 	],
 	controllers: [AppController],

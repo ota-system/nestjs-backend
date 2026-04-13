@@ -1,0 +1,4 @@
+{
+	"pattern": "^((main|dev|release)|(feat|fix|hotfix|release|chore|refactor)\/OTA-[0-9]+-[a-zA-Z0-9-]+)$",
+	"errorMsg": "Your branch is invalid format! Correct format: feat/OTA-123-add-login-page hoặc fix/OTA-456-fix-bug"
+}

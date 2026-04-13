@@ -1,0 +1,6 @@
+{
+	"HELLO": "Hello {name}!",
+	"VALIDATION": {
+		"NOT_EMPTY": "This field cannot be empty"
+	}
+}
