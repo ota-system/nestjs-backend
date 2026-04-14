@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import type { Request, Response } from "express";
 import type { I18nService } from "nestjs-i18n";
+import type { ErrorDetailDto } from "../dtos/error-detail.dto";
 import { ErrorResponseDto } from "../dtos/error-response.dto";
 import { BaseException } from "../exception/base.exception";
 
@@ -27,12 +28,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 		let status = 500;
 		let code = "DEFAULT_ERROR";
 		let message = exception.message || "Internal server error";
-		let details: string[] | null = null;
+		let details: ErrorDetailDto[] | null = null;
 
 		if (exception instanceof BaseException) {
 			status = exception.status;
 			code = exception.code;
-			details = exception.details;
+			details = exception.details ?? null;
 			if (this.i18n) {
 				try {
 					message = await this.i18n.translate(`errors.${exception.code}`, {

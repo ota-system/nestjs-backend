@@ -1,4 +1,5 @@
-import { NestFactory } from "@nestjs/core";
+import { ClassSerializerInterceptor } from "@nestjs/common";
+import { NestFactory, Reflector } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { I18nService } from "nestjs-i18n";
 import { AppModule } from "./app.module";
@@ -35,8 +36,12 @@ async function bootstrap() {
 	});
 
 	app.useGlobalPipes(CustomValidationPipe);
+
 	const i18n = app.get<I18nService<Record<string, unknown>>>(I18nService);
 	app.useGlobalFilters(new GlobalExceptionFilter(i18n));
+
+	app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+
 	await app.listen(3000);
 }
 bootstrap();

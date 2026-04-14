@@ -16,4 +16,25 @@ export const ENV_KEY = {
 		config.get<string>("DB_DATABASE", "ota"),
 
 	IS_PROD: (config: ConfigService) => config.get<boolean>("IS_PROD", false),
+
+	REDIS_HOST: (config: ConfigService) =>
+		config.get<string>("REDIS_HOST", "localhost"),
+
+	REDIS_PORT: (config: ConfigService) => config.get<number>("REDIS_PORT", 6379),
+
+	REDIS_PASSWORD: (config: ConfigService) =>
+		config.get<string>("REDIS_PASSWORD", "secure-pwd"),
+
+	MAIL_HOST: (config: ConfigService) =>
+		config.get<string>("MAIL_HOST", "smtp.gmail.com"),
+
+	MAIL_USER: (config: ConfigService) => config.get<string>("MAIL_USER", ""),
+
+	MAIL_PASS: (config: ConfigService) => config.get<string>("MAIL_PASS", ""),
+
+	MAIL_FROM: (config: ConfigService) =>
+		config.get<string>("MAIL_FROM", '"No Reply" <noreply@example.com>'),
+
+	FRONTEND_URL: (config: ConfigService) =>
+		config.get<string>("FRONTEND_URL", "http://localhost:3000"),
 };

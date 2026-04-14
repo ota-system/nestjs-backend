@@ -1,7 +1,14 @@
-import { Injectable } from "@nestjs/common";
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcryptjs";
+import { randomUUID } from "crypto";
 import type { Repository } from "typeorm";
+import type { MailService } from "../../shared/mail/mail.service";
+import type { RedisService } from "../../shared/redis/redis.service";
 import type { SignUpDto } from "./dto/sign-up.dto";
 import { UserEntity } from "./entities/user.entity";
 import type { UserRole } from "./entities/user-role.enum";
@@ -12,6 +19,8 @@ export class AuthService {
 	constructor(
 		@InjectRepository(UserEntity)
 		private readonly userRepository: Repository<UserEntity>,
+		private readonly redisService: RedisService,
+		private readonly mailService: MailService,
 	) {}
 
 	// Func for sign up
@@ -34,7 +43,40 @@ export class AuthService {
 			isActive: false,
 		});
 
-		return this.userRepository.save(newUser);
+		const savedUser = await this.userRepository.save(newUser);
+
+		const token = randomUUID();
+		await this.redisService.saveVerificationToken(
+			token,
+			savedUser.id.toString(),
+		);
+
+		await this.mailService.sendVerificationEmail(email, fullName, token);
+
+		return savedUser;
+	}
+
+	async verifyUserByLinkViaEmail(token: string): Promise<boolean> {
+		const userId = await this.redisService.getUserIdByToken(token);
+
+		if (!userId) {
+			throw new BadRequestException("Token invalid or expired.");
+		}
+
+		const user = await this.userRepository.findOne({ where: { id: userId } });
+
+		if (!user) {
+			throw new NotFoundException("User not found.");
+		}
+
+		if (user.isActive) {
+			throw new BadRequestException("User is already verified.");
+		}
+
+		user.isActive = true;
+		await this.userRepository.save(user);
+		await this.redisService.deleteToken(token);
+		return true;
 	}
 
 	// Func for check email exists, find user by email, find user by googleId (for google auth)
