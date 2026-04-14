@@ -23,6 +23,7 @@
 			"style": {
 				"noMagicNumbers": "off",
 				"noEnum": "off",
+				"useImportType": "off",
 				"useFilenamingConvention": "off"
 			},
 			"complexity": {

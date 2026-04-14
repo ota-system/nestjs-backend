@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Query } from "@nestjs/common";
-import type { AuthService } from "./auth.service";
+import { AuthService } from "./auth.service";
 import type { SignUpDto } from "./dto/sign-up.dto";
 import type { SignUpResDto } from "./dto/sign-up-res.dto";
 

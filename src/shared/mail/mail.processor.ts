@@ -1,8 +1,8 @@
 // shared/mail/mail.processor.ts
 
 import { Processor, WorkerHost } from "@nestjs/bullmq";
-import type { ConfigService } from "@nestjs/config";
-import type { MailerService } from "@nestjs-modules/mailer";
+import { ConfigService } from "@nestjs/config";
+import { MailerService } from "@nestjs-modules/mailer";
 import type { Job } from "bullmq";
 import { ENV_KEY } from "../constants/env.constant";
 

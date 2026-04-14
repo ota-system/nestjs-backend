@@ -5,7 +5,7 @@ import {
 	HttpException,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
-import type { I18nService } from "nestjs-i18n";
+import { I18nService } from "nestjs-i18n";
 import type { ErrorDetailDto } from "../dtos/error-detail.dto";
 import { ErrorResponseDto } from "../dtos/error-response.dto";
 import { BaseException } from "../exception/base.exception";
