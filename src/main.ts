@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { I18nService } from "nestjs-i18n";
 import { AppModule } from "./app.module";
 import { GlobalExceptionFilter } from "./shared/filter/global-exception.filter";
 import { CustomValidationPipe } from "./shared/pipe/custom-validation.pipe";
@@ -34,7 +35,8 @@ async function bootstrap() {
 	});
 
 	app.useGlobalPipes(CustomValidationPipe);
-	app.useGlobalFilters(new GlobalExceptionFilter());
+	const i18n = app.get<I18nService<Record<string, unknown>>>(I18nService);
+	app.useGlobalFilters(new GlobalExceptionFilter(i18n));
 	await app.listen(3000);
 }
 bootstrap();

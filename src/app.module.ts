@@ -3,9 +3,7 @@ import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { HeaderResolver, I18nModule, QueryResolver } from "nestjs-i18n";
-
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
+import { AuthModule } from "./features/auth/auth.module";
 import { UserModule } from "./features/user/user.module";
 import { getTypeOrmConfig } from "./shared/configs/type-orm.config";
 import { SharedModule } from "./shared/shared.module";
@@ -21,7 +19,7 @@ import { SharedModule } from "./shared/shared.module";
 			useFactory: (configService: ConfigService) => ({
 				fallbackLanguage: "vi",
 				loaderOptions: {
-					path: path.join(__dirname, "i18n"),
+					path: path.join(process.cwd(), "dist/i18n/"),
 					watch: true,
 				},
 			}),
@@ -42,8 +40,7 @@ import { SharedModule } from "./shared/shared.module";
 		// 3. Other
 		UserModule,
 		SharedModule,
+		AuthModule,
 	],
-	controllers: [AppController],
-	providers: [AppService],
 })
 export class AppModule {}
