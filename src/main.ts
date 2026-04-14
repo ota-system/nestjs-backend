@@ -12,7 +12,7 @@ async function bootstrap() {
 	});
 
 	app.enableCors({
-		origin: "*",
+		origin: "http://localhost:5173",
 		preflightContinue: false,
 		optionsSuccessStatus: 204,
 		credentials: true,
