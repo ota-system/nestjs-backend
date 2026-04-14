@@ -30,13 +30,16 @@
 		"**/*.{json,css,html,md}": "biome format --write --no-errors-on-unmatched"
 	},
 	"dependencies": {
+		"@nestjs/axios": "^4.0.1",
 		"@nestjs/common": "^11.0.1",
 		"@nestjs/config": "^4.0.4",
 		"@nestjs/core": "^11.0.1",
 		"@nestjs/mapped-types": "*",
 		"@nestjs/platform-express": "^11.0.1",
 		"@nestjs/swagger": "^11.2.7",
+		"@nestjs/terminus": "^11.1.1",
 		"@nestjs/typeorm": "^11.0.1",
+		"axios": "^1.15.0",
 		"class-transformer": "^0.5.1",
 		"class-validator": "^0.15.1",
 		"crypto": "^1.0.1",

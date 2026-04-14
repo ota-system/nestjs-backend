@@ -6,6 +6,7 @@ import { HeaderResolver, I18nModule, QueryResolver } from "nestjs-i18n";
 
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
+import { HealthModule } from "./features/health/health.module";
 import { UserModule } from "./features/user/user.module";
 import { getTypeOrmConfig } from "./shared/configs/type-orm.config";
 import { SharedModule } from "./shared/shared.module";
@@ -42,6 +43,7 @@ import { SharedModule } from "./shared/shared.module";
 		// 3. Other
 		UserModule,
 		SharedModule,
+		HealthModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

@@ -35,6 +35,7 @@ async function bootstrap() {
 
 	app.useGlobalPipes(CustomValidationPipe);
 	app.useGlobalFilters(new GlobalExceptionFilter());
+	app.enableShutdownHooks();
 	await app.listen(3000);
 }
 bootstrap();
