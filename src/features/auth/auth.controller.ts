@@ -1,27 +1,40 @@
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Body, Controller, Post } from "@nestjs/common";
+import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import { AuthService } from "./auth.service";
+import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
 import { SignUpDto } from "./dto/sign-up.dto";
-import { SignUpResDto } from "./dto/sign-up-res.dto";
+import type { SignUpResDto } from "./dto/sign-up-res.dto";
+import { VerifyTokenDto } from "./dto/verify-token.dto";
 
-@Controller("auth")
+@Controller({ path: "auth", version: "1" })
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
 
-	@Post("signup")
+	@Post("sign-up")
 	async signUp(
 		@Body() signUpDto: SignUpDto,
-	): Promise<{ result: SignUpResDto }> {
-		const result = await this.authService.signUpLocal(signUpDto);
-		return { result };
+	): Promise<BaseResponse<SignUpResDto>> {
+		const user = await this.authService.signUpLocal(signUpDto);
+		const data: SignUpResDto = {
+			id: user.id,
+			fullName: user.fullName,
+			email: user.email,
+			// biome-ignore lint/style/noNonNullAssertion: role is always set on signupLoca
+			role: user.role!,
+			avatarUrl: user.avatarUrl,
+			createdAt: user.createdAt,
+		};
+		return BaseResponse.ok(
+			data,
+			"Đăng ký thành công. Vui lòng kiểm tra email!",
+		);
 	}
 
-	@Get("verify")
-	async verifyEmail(@Query("token") token: string) {
-		const isVerified = await this.authService.verifyUserByLinkViaEmail(token);
-
-		return {
-			success: true,
-			message: "Email verified successfully. You can now log in.",
-		};
+	@Post("verify-token")
+	async verifyToken(
+		@Body() dto: VerifyTokenDto,
+	): Promise<BaseResponse<AuthTokensResDto>> {
+		const tokens = await this.authService.verifyTokenAndLogin(dto.token);
+		return BaseResponse.ok(tokens, "Xác thực email thành công!");
 	}
 }

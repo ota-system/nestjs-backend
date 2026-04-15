@@ -1,4 +1,4 @@
-import { ClassSerializerInterceptor } from "@nestjs/common";
+import { ClassSerializerInterceptor, VersioningType } from "@nestjs/common";
 import { NestFactory, Reflector } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { I18nService } from "nestjs-i18n";
@@ -11,6 +11,10 @@ async function bootstrap() {
 		logger: ["error", "warn", "debug", "log"],
 	});
 
+	// Global prefix & versioning
+	app.setGlobalPrefix("api");
+	app.enableVersioning({ type: VersioningType.URI });
+
 	app.enableCors({
 		origin: "http://localhost:5173",
 		preflightContinue: false,
@@ -19,7 +23,7 @@ async function bootstrap() {
 		allowedHeaders: "Content-Type, Accept, Authorization",
 	});
 
-	// 1. Swagger Setup
+	// Swagger
 	const config = new DocumentBuilder()
 		.setTitle("OTA API")
 		.setDescription("The OTA API documentation")
@@ -28,11 +32,8 @@ async function bootstrap() {
 		.build();
 
 	const document = SwaggerModule.createDocument(app, config);
-	// Go to http://localhost:3000/swagger-ui to see the Swagger UI with persistAuthorization enabled
 	SwaggerModule.setup("swagger-ui", app, document, {
-		swaggerOptions: {
-			persistAuthorization: true,
-		},
+		swaggerOptions: { persistAuthorization: true },
 	});
 
 	app.useGlobalPipes(CustomValidationPipe);

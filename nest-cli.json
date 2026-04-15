@@ -8,6 +8,10 @@
 			{
 				"include": "i18n/**/*",
 				"watchAssets": true
+			},
+			{
+				"include": "templates/*.hbs",
+				"watchAssets": true
 			}
 		],
 		"plugins": [

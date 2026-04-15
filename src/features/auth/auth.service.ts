@@ -3,12 +3,16 @@ import {
 	Injectable,
 	NotFoundException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import type { Repository } from "typeorm";
+import { ENV_KEY } from "../../shared/constants/env.constant";
 import { MailService } from "../../shared/mail/mail.service";
 import { RedisService } from "../../shared/redis/redis.service";
+import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
 import type { SignUpDto } from "./dto/sign-up.dto";
 import { UserEntity } from "./entities/user.entity";
 import type { UserRole } from "./entities/user-role.enum";
@@ -21,9 +25,12 @@ export class AuthService {
 		private readonly userRepository: Repository<UserEntity>,
 		private readonly redisService: RedisService,
 		private readonly mailService: MailService,
+		private readonly jwtService: JwtService,
+		private readonly configService: ConfigService,
 	) {}
 
-	// Func for sign up
+	// ─── Sign Up ───────────────────────────────────────────────────────────────
+
 	async signUpLocal(signUpDto: SignUpDto): Promise<UserEntity> {
 		const { email, password, fullName, role } = signUpDto;
 
@@ -46,52 +53,71 @@ export class AuthService {
 		const savedUser = await this.userRepository.save(newUser);
 
 		const token = randomUUID();
-		await this.redisService.saveVerificationToken(
-			token,
-			savedUser.id.toString(),
-		);
-
+		await this.redisService.saveVerificationToken(token, savedUser.id);
 		await this.mailService.sendVerificationEmail(email, fullName, token);
 
 		return savedUser;
 	}
 
-	async verifyUserByLinkViaEmail(token: string): Promise<boolean> {
+	// ─── Verify token & return JWT tokens ─────────────────────────────────────
+
+	async verifyTokenAndLogin(token: string): Promise<AuthTokensResDto> {
 		const userId = await this.redisService.getUserIdByToken(token);
 
 		if (!userId) {
-			throw new BadRequestException("Token invalid or expired.");
+			throw new BadRequestException("Token không hợp lệ hoặc đã hết hạn.");
 		}
 
 		const user = await this.userRepository.findOne({ where: { id: userId } });
 
 		if (!user) {
-			throw new NotFoundException("User not found.");
+			throw new NotFoundException("Người dùng không tồn tại.");
 		}
 
 		if (user.isActive) {
-			throw new BadRequestException("User is already verified.");
+			throw new BadRequestException("Tài khoản đã được xác thực trước đó.");
 		}
 
 		user.isActive = true;
 		await this.userRepository.save(user);
 		await this.redisService.deleteToken(token);
-		return true;
+
+		return this.generateTokens(user);
 	}
 
-	// Func for check email exists, find user by email, find user by googleId (for google auth)
+	// ─── Token generation ──────────────────────────────────────────────────────
+
+	private async generateTokens(user: UserEntity): Promise<AuthTokensResDto> {
+		const payload = { sub: user.id, email: user.email, role: user.role };
+
+		const accessToken = await this.jwtService.signAsync(payload);
+
+		const refreshExpires = ENV_KEY.JWT_REFRESH_EXPIRES(this.configService);
+		const refreshTtlSec = ENV_KEY.JWT_REFRESH_EXPIRES_SECONDS(
+			this.configService,
+		);
+		const refreshToken = await this.jwtService.signAsync(
+			{ sub: user.id },
+			{
+				secret: ENV_KEY.JWT_SECRET(this.configService),
+				// biome-ignore lint/suspicious/noExplicitAny: @nestjs/jwt StringValue type limitation
+				expiresIn: refreshExpires as any,
+			},
+		);
+
+		await this.redisService.saveRefreshToken(
+			user.id,
+			refreshToken,
+			refreshTtlSec,
+		);
+
+		return { accessToken, refreshToken };
+	}
+
+	// ─── Helpers ───────────────────────────────────────────────────────────────
+
 	private async checkEmailExists(email: string): Promise<boolean> {
-		const user = await this.userRepository.findOne({
-			where: { email },
-		});
+		const user = await this.userRepository.findOne({ where: { email } });
 		return !!user;
-	}
-
-	private async findByEmail(email: string): Promise<UserEntity | null> {
-		return this.userRepository.findOne({ where: { email } });
-	}
-
-	private async findByGoogleId(googleId: string): Promise<UserEntity | null> {
-		return this.userRepository.findOne({ where: { googleId } });
 	}
 }

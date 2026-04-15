@@ -36,5 +36,17 @@ export const ENV_KEY = {
 		config.get<string>("MAIL_FROM", '"No Reply" <noreply@example.com>'),
 
 	FRONTEND_URL: (config: ConfigService) =>
-		config.get<string>("FRONTEND_URL", "http://localhost:3000"),
+		config.get<string>("FRONTEND_URL", "http://localhost:5173"),
+
+	JWT_SECRET: (config: ConfigService) =>
+		config.get<string>("JWT_SECRET", "super-secret-change-in-prod"),
+
+	JWT_ACCESS_EXPIRES: (config: ConfigService) =>
+		config.get<string>("JWT_ACCESS_EXPIRES", "15m"),
+
+	JWT_REFRESH_EXPIRES: (config: ConfigService) =>
+		config.get<string>("JWT_REFRESH_EXPIRES", "7d"),
+
+	JWT_REFRESH_EXPIRES_SECONDS: (config: ConfigService) =>
+		config.get<number>("JWT_REFRESH_EXPIRES_SECONDS", 7 * 24 * 60 * 60), // 7 days in seconds
 };

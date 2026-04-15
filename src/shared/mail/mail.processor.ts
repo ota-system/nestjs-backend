@@ -1,5 +1,3 @@
-// shared/mail/mail.processor.ts
-
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { ConfigService } from "@nestjs/config";
 import { MailerService } from "@nestjs-modules/mailer";

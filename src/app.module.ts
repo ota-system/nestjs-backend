@@ -1,104 +1,60 @@
-import * as path from "node:path"; // Dùng node:path cho chuẩn Biome/Node
 import { RedisModule } from "@liaoliaots/nestjs-redis";
 import { BullModule } from "@nestjs/bullmq";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { MailerModule } from "@nestjs-modules/mailer";
-import { HandlebarsAdapter } from "@nestjs-modules/mailer/adapters/handlebars.adapter";
-import { HeaderResolver, I18nModule, QueryResolver } from "nestjs-i18n";
-import { join } from "path";
+import { I18nModule } from "nestjs-i18n";
 import { AuthModule } from "./features/auth/auth.module";
 import { UserModule } from "./features/user/user.module";
+import { getBullConfig } from "./shared/configs/bull.config";
+import { getI18nConfig, i18nResolvers } from "./shared/configs/i18n.config";
+import { getMailerConfig } from "./shared/configs/mailer.config";
+import { getRedisConfig } from "./shared/configs/redis.config";
 import { getTypeOrmConfig } from "./shared/configs/type-orm.config";
-import { ENV_KEY } from "./shared/constants/env.constant";
 import { SharedModule } from "./shared/shared.module";
 
 @Module({
 	imports: [
-		ConfigModule.forRoot({
-			isGlobal: true,
-		}),
+		ConfigModule.forRoot({ isGlobal: true }),
 
-		// 1. I18n Module
+		// 1. I18n
 		I18nModule.forRootAsync({
-			useFactory: (configService: ConfigService) => ({
-				fallbackLanguage: "vi",
-				loaderOptions: {
-					path: path.join(process.cwd(), "dist/i18n/"),
-					watch: true,
-				},
-			}),
-			resolvers: [
-				new QueryResolver(["lang", "l"]), //1st priority: check query parameters
-				new HeaderResolver(["x-lang"]), //2nd priority: check custom header
-			],
+			useFactory: getI18nConfig,
+			resolvers: i18nResolvers,
 			inject: [ConfigService],
 		}),
 
-		// 2. Database Module
+		// 2. Database
 		TypeOrmModule.forRootAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
 			useFactory: getTypeOrmConfig,
 		}),
 
-		// 3. Redis Module
+		// 3. Redis
 		RedisModule.forRootAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
-			useFactory: (configService: any) => ({
-				config: {
-					host: ENV_KEY.REDIS_HOST(configService),
-					port: ENV_KEY.REDIS_PORT(configService),
-					password: ENV_KEY.REDIS_PASSWORD(configService),
-				},
-			}),
+			useFactory: getRedisConfig,
 		}),
 
-		// 4. BullMQ module
+		// 4. BullMQ
 		BullModule.forRootAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
-			useFactory: (configService: ConfigService) => ({
-				connection: {
-					host: ENV_KEY.REDIS_HOST(configService),
-					port: ENV_KEY.REDIS_PORT(configService),
-					password: ENV_KEY.REDIS_PASSWORD(configService),
-				},
-			}),
+			useFactory: getBullConfig,
 		}),
-		BullModule.registerQueue({
-			name: "mail_queue",
-		}),
+		BullModule.registerQueue({ name: "mail_queue" }),
 
-		// 5. Email module
+		// 5. Mailer
 		MailerModule.forRootAsync({
 			imports: [ConfigModule],
 			inject: [ConfigService],
-			useFactory: (configService: ConfigService) => ({
-				transport: {
-					host: ENV_KEY.MAIL_HOST(configService),
-					secure: true,
-					auth: {
-						user: ENV_KEY.MAIL_USER(configService),
-						pass: ENV_KEY.MAIL_PASS(configService),
-					},
-				},
-				defaults: {
-					from: ENV_KEY.MAIL_FROM(configService),
-				},
-				template: {
-					dir: join(__dirname, "templates"), // Thư mục chứa file .hbs
-					adapter: new HandlebarsAdapter(),
-					options: {
-						strict: true,
-					},
-				},
-			}),
+			useFactory: getMailerConfig,
 		}),
 
-		// Other
+		// Features
 		UserModule,
 		SharedModule,
 		AuthModule,
