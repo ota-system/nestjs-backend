@@ -6,6 +6,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { I18nModule } from "nestjs-i18n";
 import { AuthModule } from "./features/auth/auth.module";
+import { HealthModule } from "./features/health/health.module";
 import { UserModule } from "./features/user/user.module";
 import { getBullConfig } from "./shared/configs/bull.config";
 import { getI18nConfig, i18nResolvers } from "./shared/configs/i18n.config";
@@ -57,6 +58,7 @@ import { SharedModule } from "./shared/shared.module";
 		// Features
 		UserModule,
 		SharedModule,
+		HealthModule,
 		AuthModule,
 	],
 })

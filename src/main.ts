@@ -37,6 +37,8 @@ async function bootstrap() {
 	});
 
 	app.useGlobalPipes(CustomValidationPipe);
+	app.useGlobalFilters(new GlobalExceptionFilter());
+	app.enableShutdownHooks();
 
 	const i18n = app.get<I18nService<Record<string, unknown>>>(I18nService);
 	app.useGlobalFilters(new GlobalExceptionFilter(i18n));

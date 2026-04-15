@@ -65,7 +65,7 @@ export class AuthService {
 		const userId = await this.redisService.getUserIdByToken(token);
 
 		if (!userId) {
-			throw new BadRequestException("Token không hợp lệ hoặc đã hết hạn.");
+			throw new BadRequestException("Đường dẫn không hợp lệ hoặc đã hết hạn.");
 		}
 
 		const user = await this.userRepository.findOne({ where: { id: userId } });
