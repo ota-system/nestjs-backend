@@ -27,6 +27,9 @@ export class MailProcessor extends WorkerHost {
 				});
 				break;
 			}
+			default: {
+				throw new Error(`Unknown job name: ${job.name}`);
+			}
 		}
 	}
 }

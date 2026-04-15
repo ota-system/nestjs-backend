@@ -49,4 +49,7 @@ export const ENV_KEY = {
 
 	JWT_REFRESH_EXPIRES_SECONDS: (config: ConfigService) =>
 		config.get<number>("JWT_REFRESH_EXPIRES_SECONDS", 7 * 24 * 60 * 60), // 7 days in seconds
+
+	CORS_ORIGINS: (config: ConfigService) =>
+		config.get<string>("CORS_ORIGINS", "http://localhost:5173"),
 };

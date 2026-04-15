@@ -1,4 +1,5 @@
 import { ClassSerializerInterceptor, VersioningType } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { NestFactory, Reflector } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { I18nService } from "nestjs-i18n";
@@ -10,13 +11,17 @@ async function bootstrap() {
 	const app = await NestFactory.create(AppModule, {
 		logger: ["error", "warn", "debug", "log"],
 	});
+	const configService = app.get(ConfigService);
+
+	const origins = configService.get<string>("CORS_ORIGINS");
+	const allowedOrigins = origins?.split(",") || ["http://localhost:5173"];
 
 	// Global prefix & versioning
 	app.setGlobalPrefix("api");
 	app.enableVersioning({ type: VersioningType.URI });
 
 	app.enableCors({
-		origin: "http://localhost:5173",
+		origin: allowedOrigins,
 		preflightContinue: false,
 		optionsSuccessStatus: 204,
 		credentials: true,
@@ -37,12 +42,9 @@ async function bootstrap() {
 	});
 
 	app.useGlobalPipes(CustomValidationPipe);
-	app.useGlobalFilters(new GlobalExceptionFilter());
 	app.enableShutdownHooks();
-
 	const i18n = app.get<I18nService<Record<string, unknown>>>(I18nService);
 	app.useGlobalFilters(new GlobalExceptionFilter(i18n));
-
 	app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
 	await app.listen(3000);

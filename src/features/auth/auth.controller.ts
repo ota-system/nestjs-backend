@@ -19,7 +19,7 @@ export class AuthController {
 			id: user.id,
 			fullName: user.fullName,
 			email: user.email,
-			// biome-ignore lint/style/noNonNullAssertion: role is always set on signupLoca
+			// biome-ignore lint/style/noNonNullAssertion: role is always set on signUpLocal
 			role: user.role!,
 			avatarUrl: user.avatarUrl,
 			createdAt: user.createdAt,

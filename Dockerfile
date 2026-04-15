@@ -18,7 +18,7 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/src/templates ./dist/templates
 # Use legacy-peer-deps to advoid dependency conflict issues. (Nest 11 with BullMQ and NodeMailer)
-RUN npm install --only=production --legacy-peer-deps --ignore-scripts
+RUN npm ci --omit=dev --legacy-peer-deps --ignore-scripts
 
 EXPOSE 3000
 
