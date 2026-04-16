@@ -17,6 +17,5 @@ export class SignUpDto {
 	@IsEnum(UserRole, {
 		message: "Role must be either TEACHER or STUDENT",
 	})
-	@IsEnum(UserRole)
 	role!: UserRole; //2 options: 'TEACHER' | 'STUDENT'
 }

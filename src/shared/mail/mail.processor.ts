@@ -1,17 +1,7 @@
 import { Processor, WorkerHost } from "@nestjs/bullmq";
 import { Logger } from "@nestjs/common";
-import { MailerService } from "@nestjs-modules/mailer";
+import { ISendMailOptions, MailerService } from "@nestjs-modules/mailer";
 import type { Job } from "bullmq";
-
-const EMAIL_SUBJECTS: Record<string, string> = {
-	sendVerificationEmail: "Xác thực tài khoản OTA-Hub",
-	resetPassword: "Đặt lại mật khẩu của bạn",
-};
-
-const EMAIL_TEMPLATES: Record<string, string> = {
-	sendVerificationEmail: "verification",
-	resetPassword: "resetPassword",
-};
 
 @Processor("mail_queue")
 export class MailProcessor extends WorkerHost {
@@ -21,26 +11,19 @@ export class MailProcessor extends WorkerHost {
 		super();
 	}
 
-	async process(job: Job<any, any, string>): Promise<any> {
-		const { email, fullName, ...otherData } = job.data;
-
-		const context: Record<string, any> = {
-			name: fullName,
-			...otherData,
-		};
-
-		this.logger.log(`Processing mail job: ${job.name}`, { email });
+	async process(job: Job<ISendMailOptions, any, string>): Promise<any> {
+		const to =
+			typeof job.data.to === "string"
+				? job.data.to
+				: JSON.stringify(job.data.to);
+		this.logger.log(`Sending job to handle: ${job.name} (Send to: ${to})`);
 
 		try {
-			await this.mailerService.sendMail({
-				to: email,
-				subject: EMAIL_SUBJECTS[job.name] ?? "Thông báo từ OTA-Hub",
-				template: `./${EMAIL_TEMPLATES[job.name] ?? job.name}`,
-				context,
-			});
+			await this.mailerService.sendMail(job.data);
+			this.logger.log(`Successfully sent email: ${job.name} (Send to: ${to})`);
 		} catch (error) {
 			this.logger.error(
-				`Failed to send email for job "${job.name}"`,
+				`Failed to send email for job "${job.name}" (Send to: ${to})`,
 				error.stack,
 			);
 			throw error;
