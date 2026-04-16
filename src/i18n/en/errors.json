@@ -1,0 +1,9 @@
+{
+	"EMAIL_ALREADY_REGISTERED": "Email is already registered. Please use another email or sign in.",
+	"INVALID_CREDENTIALS": "Email or password is incorrect.",
+	"ACCOUNT_LOCKED": "This account has been locked.",
+	"EMAIL_REQUIRED": "Email is required.",
+	"INVALID_INPUT": "Invalid input provided.",
+	"DEFAULT_ERROR": "An unexpected error occurred.",
+	"BAD_REQUEST": "Bad request."
+}

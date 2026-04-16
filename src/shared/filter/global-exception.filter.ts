@@ -1,33 +1,60 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from "@nestjs/common";
-import { Request, Response } from "express";
+import {
+	type ArgumentsHost,
+	Catch,
+	type ExceptionFilter,
+	HttpException,
+} from "@nestjs/common";
+import type { Request, Response } from "express";
+import { I18nService } from "nestjs-i18n";
+import type { ErrorDetailDto } from "../dtos/error-detail.dto";
 import { ErrorResponseDto } from "../dtos/error-response.dto";
 import { BaseException } from "../exception/base.exception";
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-	catch(exception: any, host: ArgumentsHost): any {
+	constructor(private readonly i18n?: I18nService) {}
+
+	async catch(exception: any, host: ArgumentsHost): Promise<any> {
 		const ctx = host.switchToHttp();
 		const response = ctx.getResponse<Response>();
 		const request = ctx.getRequest<Request>();
 
-		let errorResponse: ErrorResponseDto;
+		const lang =
+			(request.query.lang as string) ||
+			(request.query.l as string) ||
+			(request.headers["x-lang"] as string) ||
+			"vi";
+
+		let status = 500;
+		let code = "DEFAULT_ERROR";
+		let message = exception.message || "Internal server error";
+		let details: ErrorDetailDto[] | null = null;
 
 		if (exception instanceof BaseException) {
-			errorResponse = new ErrorResponseDto(
-				exception.message,
-				exception.code,
-				request.originalUrl,
-				exception.details,
-			);
-		} else {
-			errorResponse = new ErrorResponseDto(
-				exception.message,
-				"DEFAULT-ERROR",
-				request.originalUrl,
-				null,
-			);
+			status = exception.status;
+			code = exception.code;
+			details = exception.details ?? null;
+			message = code; // fallback: show code if i18n unavailable
+			if (this.i18n) {
+				try {
+					message = await this.i18n.translate(`errors.${code}`, { lang });
+				} catch {}
+			}
+		} else if (exception instanceof HttpException) {
+			status = exception.getStatus();
+			const responseBody = exception.getResponse();
+			if (typeof responseBody === "object" && responseBody !== null) {
+				message = (responseBody as any).message || message;
+			}
 		}
 
-		response.status(exception.status || 500).json(errorResponse);
+		const errorResponse = new ErrorResponseDto(
+			message,
+			code,
+			request.originalUrl,
+			details,
+		);
+
+		response.status(status).json(errorResponse);
 	}
 }
