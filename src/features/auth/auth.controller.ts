@@ -1,8 +1,9 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, HttpCode, Post } from "@nestjs/common";
 import { I18n, I18nContext } from "nestjs-i18n";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import { AuthService } from "./auth.service";
 import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
+import { LoginRequestDto } from "./dto/login-req.dto";
 import { SignUpDto } from "./dto/sign-up.dto";
 import type { SignUpResDto } from "./dto/sign-up-res.dto";
 import { VerifyTokenDto } from "./dto/verify-token.dto";
@@ -30,11 +31,19 @@ export class AuthController {
 	}
 
 	@Post("verify-token")
+	@HttpCode(200)
 	async verifyToken(
 		@Body() dto: VerifyTokenDto,
 		@I18n() i18n: I18nContext,
 	): Promise<BaseResponse<AuthTokensResDto>> {
 		const tokens = await this.authService.verifyTokenAndLogin(dto.token);
 		return BaseResponse.ok(tokens, await i18n.t("auth.VERIFY_EMAIL_SUCCESS"));
+	}
+
+	@Post("login")
+	@HttpCode(200)
+	async login(@Body() dto: LoginRequestDto, @I18n() i18n: I18nContext) {
+		const tokens = await this.authService.loginLocal(dto.email, dto.password);
+		return BaseResponse.ok(tokens, await i18n.t("auth.LOGIN_SUCCESS"));
 	}
 }

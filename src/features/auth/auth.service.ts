@@ -120,4 +120,26 @@ export class AuthService {
 		const user = await this.userRepository.findOne({ where: { email } });
 		return !!user;
 	}
+
+	async loginLocal(email: string, password: string) {
+		const user: UserEntity | null = await this.userRepository.findOne({
+			where: { email },
+		});
+		if (!user) {
+			throw new BadRequestException("Email hoặc mật khẩu không chính xác");
+		}
+		if (!user.isActive) {
+			throw new BadRequestException("Tài khoản chưa được xác thực.");
+		}
+
+		const isPasswordCorrect = await bcrypt.compare(
+			password,
+			user.hashedPassword || "",
+		);
+		if (!isPasswordCorrect) {
+			throw new BadRequestException("Email hoặc mật khẩu không chính xác");
+		}
+
+		return await this.generateTokens(user);
+	}
 }
