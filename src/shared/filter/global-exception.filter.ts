@@ -34,11 +34,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 			status = exception.status;
 			code = exception.code;
 			details = exception.details ?? null;
+			message = code; // fallback: show code if i18n unavailable
 			if (this.i18n) {
 				try {
-					message = await this.i18n.translate(`errors.${exception.code}`, {
-						lang,
-					});
+					message = await this.i18n.translate(`errors.${code}`, { lang });
 				} catch {}
 			}
 		} else if (exception instanceof HttpException) {

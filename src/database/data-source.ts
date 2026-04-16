@@ -3,7 +3,7 @@
 import { config } from "dotenv";
 import { DataSource, type DataSourceOptions } from "typeorm";
 
-// Use dotenv to load environment variables from .env file (just in this file, not globally)
+// Use dotenv(process) to load environment variables from .env file (just in this file, not globally)
 config();
 
 export const dataSourceOptions: DataSourceOptions = {
@@ -13,7 +13,7 @@ export const dataSourceOptions: DataSourceOptions = {
 	username: process.env.DB_USERNAME,
 	password: process.env.DB_PASSWORD,
 	database: process.env.DB_DATABASE,
-	entities: ["dist/src/features/**/**/*.entity.js"],
+	entities: [__dirname + "/../**/*.entity{.ts,.js}"],
 	migrations: ["dist/database/migrations/*.js"],
 	synchronize: false,
 };

@@ -3,6 +3,7 @@ import { UserRole } from "../entities/user-role.enum";
 
 export class SignUpDto {
 	@IsNotEmpty()
+	@MinLength(2)
 	fullName!: string;
 
 	@IsEmail()
@@ -16,5 +17,6 @@ export class SignUpDto {
 	@IsEnum(UserRole, {
 		message: "Role must be either TEACHER or STUDENT",
 	})
+	@IsEnum(UserRole)
 	role!: UserRole; //2 options: 'TEACHER' | 'STUDENT'
 }

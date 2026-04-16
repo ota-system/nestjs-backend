@@ -17,25 +17,25 @@ export class UserEntity {
 	@PrimaryGeneratedColumn("uuid")
 	id!: string;
 
-	@Column({ name: "full_name", type: "varchar", length: 100, nullable: false })
+	@Column({ name: "full-name", type: "varchar", length: 100, nullable: false })
 	fullName!: string;
 
 	@Exclude()
-	@Column({ name: "hashed_password", type: "text", nullable: true })
+	@Column({ name: "hashed-password", type: "text", nullable: true })
 	hashedPassword?: string;
 
-	@Column({ name: "google_id", type: "varchar", nullable: true, unique: true })
+	@Column({ name: "google-id", type: "varchar", nullable: true, unique: true })
 	googleId?: string;
 
-	@Column({ name: "avatar_url", type: "text", nullable: true })
+	@Column({ name: "avatar-url", type: "text", nullable: true })
 	avatarUrl?: string;
 
 	@Column({ type: "varchar", length: 100, nullable: false, unique: true })
 	email!: string;
 
 	@Column({
-		type: "enum",
-		enum: UserRole,
+		type: "varchar",
+		length: 50,
 		default: null,
 		nullable: true,
 	})

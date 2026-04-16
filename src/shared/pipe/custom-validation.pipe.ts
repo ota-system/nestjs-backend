@@ -15,6 +15,6 @@ export const CustomValidationPipe = new ValidationPipe({
 				),
 		);
 
-		return new BaseException("Bad request", 400, "INVALID_INPUT", details);
+		return new BaseException(400, "INVALID_INPUT", details);
 	},
 });
