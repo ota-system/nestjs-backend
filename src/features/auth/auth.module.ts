@@ -9,6 +9,7 @@ import { SharedModule } from "../../shared/shared.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { UserEntity } from "./entities/user.entity";
+import { JwtStrategy } from "./strategies/jwt.strategy";
 
 @Module({
 	imports: [
@@ -23,7 +24,7 @@ import { UserEntity } from "./entities/user.entity";
 		SharedModule,
 	],
 	controllers: [AuthController],
-	providers: [AuthService],
+	providers: [AuthService, JwtStrategy],
 	exports: [AuthService],
 })
 export class AuthModule {}
