@@ -12,6 +12,7 @@ import type { Repository } from "typeorm";
 import { ENV_KEY } from "../../shared/constants/env.constant";
 import { MailService } from "../../shared/mail/mail.service";
 import { RedisService } from "../../shared/redis/redis.service";
+import { RefreshJwtPayload } from "./auth.type";
 import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
 import type { SignUpDto } from "./dto/sign-up.dto";
 import { UserEntity } from "./entities/user.entity";
@@ -100,7 +101,13 @@ export class AuthService {
 	// ─── Token generation ──────────────────────────────────────────────────────
 
 	public async generateTokens(user: UserEntity): Promise<AuthTokensResDto> {
-		const payload = { sub: user.id, email: user.email, role: user.role };
+		const sessionId = randomUUID();
+		const payload = {
+			sub: user.id,
+			email: user.email,
+			role: user.role,
+			sid: sessionId,
+		};
 
 		const accessToken = await this.jwtService.signAsync(payload);
 
@@ -109,7 +116,7 @@ export class AuthService {
 			this.configService,
 		);
 		const refreshToken = await this.jwtService.signAsync(
-			{ sub: user.id },
+			{ sub: user.id, sid: sessionId },
 			{
 				secret: ENV_KEY.JWT_SECRET(this.configService),
 				// biome-ignore lint/suspicious/noExplicitAny: @nestjs/jwt StringValue type limitation
@@ -117,8 +124,9 @@ export class AuthService {
 			},
 		);
 
-		await this.redisService.saveRefreshToken(
+		await this.redisService.saveRefreshSession(
 			user.id,
+			sessionId,
 			refreshToken,
 			refreshTtlSec,
 		);
@@ -187,5 +195,52 @@ export class AuthService {
 		}
 
 		return await this.generateTokens(user);
+	}
+
+	async signout(
+		userId: string,
+		accessSessionId: string,
+		accessExp: number,
+		refreshToken: string,
+	): Promise<boolean> {
+		const nowSec = Math.floor(Date.now() / 1000);
+		const accessTtlSec = Math.max(accessExp - nowSec, 1);
+		await this.redisService.revokeAccessSession(accessSessionId, accessTtlSec);
+
+		let refreshPayload: RefreshJwtPayload;
+
+		try {
+			refreshPayload = await this.jwtService.verifyAsync<RefreshJwtPayload>(
+				refreshToken,
+				{
+					secret: ENV_KEY.JWT_SECRET(this.configService),
+				},
+			);
+		} catch {
+			return true;
+		}
+
+		if (
+			!refreshPayload?.sub ||
+			refreshPayload.sub !== userId ||
+			refreshPayload.sid !== accessSessionId ||
+			!refreshPayload.sid
+		) {
+			return true;
+		}
+
+		const currentSession = await this.redisService.getRefreshSession(
+			userId,
+			refreshPayload.sid,
+		);
+		if (
+			currentSession &&
+			!currentSession.isRevoked &&
+			currentSession.token === refreshToken
+		) {
+			await this.redisService.deleteRefreshSession(userId, refreshPayload.sid);
+		}
+
+		return true;
 	}
 }
