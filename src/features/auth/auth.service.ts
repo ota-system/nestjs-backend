@@ -142,4 +142,38 @@ export class AuthService {
 
 		return await this.generateTokens(user);
 	}
+
+	async loginGoogle(
+		googleId: string,
+		email: string,
+		fullName: string,
+		avartarUrl: string | undefined,
+	): Promise<AuthTokensResDto> {
+		if (!email) {
+			throw new BadRequestException("Email không hợp lệ");
+		}
+
+		let user = await this.userRepository.findOne({
+			where: { email },
+		});
+
+		if (!user) {
+			user = this.userRepository.create({
+				googleId: googleId,
+				email,
+				provider: "google",
+				isActive: true,
+				fullName: fullName,
+				avatarUrl: avartarUrl,
+			});
+
+			await this.userRepository.save(user);
+		}
+
+		if (!user.isActive) {
+			user.isActive = true;
+		}
+
+		return await this.generateTokens(user);
+	}
 }

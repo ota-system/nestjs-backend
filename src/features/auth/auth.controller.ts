@@ -7,10 +7,14 @@ import { LoginRequestDto } from "./dto/login-req.dto";
 import { SignUpDto } from "./dto/sign-up.dto";
 import type { SignUpResDto } from "./dto/sign-up-res.dto";
 import { VerifyTokenDto } from "./dto/verify-token.dto";
+import { GoogleAuthService } from "./google-auth.service";
 
 @Controller({ path: "auth", version: "1" })
 export class AuthController {
-	constructor(private readonly authService: AuthService) {}
+	constructor(
+		private readonly googleAuthService: GoogleAuthService,
+		private readonly authService: AuthService,
+	) {}
 
 	@Post("sign-up")
 	async signUp(
@@ -45,5 +49,17 @@ export class AuthController {
 	async login(@Body() dto: LoginRequestDto, @I18n() i18n: I18nContext) {
 		const tokens = await this.authService.loginLocal(dto.email, dto.password);
 		return BaseResponse.ok(tokens, await i18n.t("auth.LOGIN_SUCCESS"));
+	}
+
+	@Post("google")
+	async googleLogin(@Body("idToken") idToken: string) {
+		const user = await this.googleAuthService.verifyToken(idToken);
+		const tokens = await this.authService.loginGoogle(
+			user.googleId || "",
+			user.email || "",
+			user.name || "",
+			user.picture,
+		);
+		return BaseResponse.ok(tokens, "Google login successful");
 	}
 }
