@@ -21,11 +21,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 	}
 
 	async validate(payload: AccessJwtPayload): Promise<AccessJwtPayload> {
-		const i18n = I18nContext.current();
-
 		if (!payload.sid) {
 			throw new UnauthorizedException(
-				await i18n?.t("auth.INVALID_TOKEN_SESSION"),
+				await this.translateAuthMessage(
+					"INVALID_TOKEN_SESSION",
+					"Invalid token or session. Please sign in again.",
+				),
 			);
 		}
 
@@ -34,10 +35,32 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 		);
 		if (isRevoked) {
 			throw new UnauthorizedException(
-				await i18n?.t("auth.ACCESS_TOKEN_REVOKED"),
+				await this.translateAuthMessage(
+					"ACCESS_TOKEN_REVOKED",
+					"Access token has been revoked. Please sign in again.",
+				),
 			);
 		}
 
 		return payload;
+	}
+
+	private async translateAuthMessage(
+		key: string,
+		fallback: string,
+	): Promise<string> {
+		const i18n = I18nContext.current();
+		if (!i18n) {
+			return fallback;
+		}
+
+		try {
+			const message = await i18n.t(`auth.${key}`);
+			return typeof message === "string" && message.length > 0
+				? message
+				: fallback;
+		} catch {
+			return fallback;
+		}
 	}
 }

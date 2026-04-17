@@ -27,10 +27,6 @@ export class RedisService {
 		return `refresh_session:${userId}:${sessionId}`;
 	}
 
-	private getRefreshSessionIndexKey(userId: string): string {
-		return `refresh_session_index:${userId}`;
-	}
-
 	private getRevokedAccessSessionKey(sessionId: string): string {
 		return `revoked_access_sid:${sessionId}`;
 	}
@@ -74,11 +70,7 @@ export class RedisService {
 			deletedAt: null,
 		};
 
-		await this.redis
-			.multi()
-			.set(key, JSON.stringify(record), "EX", ttlSeconds)
-			.sadd(this.getRefreshSessionIndexKey(userId), sessionId)
-			.exec();
+		await this.redis.set(key, JSON.stringify(record), "EX", ttlSeconds);
 	}
 
 	async getRefreshSession(
@@ -100,11 +92,7 @@ export class RedisService {
 
 	async deleteRefreshSession(userId: string, sessionId: string): Promise<void> {
 		const key = this.getRefreshSessionKey(userId, sessionId);
-		await this.redis
-			.multi()
-			.del(key)
-			.srem(this.getRefreshSessionIndexKey(userId), sessionId)
-			.exec();
+		await this.redis.del(key);
 	}
 
 	async revokeAccessSession(
@@ -117,7 +105,7 @@ export class RedisService {
 
 	async isAccessSessionRevoked(sessionId: string): Promise<boolean> {
 		const key = this.getRevokedAccessSessionKey(sessionId);
-		const value = await this.redis.get(key);
-		return value === "1";
+		const exists = await this.redis.exists(key);
+		return exists > 0;
 	}
 }

@@ -167,6 +167,7 @@ export class AuthService {
 		if (
 			!refreshPayload?.sub ||
 			refreshPayload.sub !== userId ||
+			refreshPayload.sid !== accessSessionId ||
 			!refreshPayload.sid
 		) {
 			return true;
