@@ -54,7 +54,19 @@ export class AuthService {
 
 		const token = randomUUID();
 		await this.redisService.saveVerificationToken(token, savedUser.id);
-		await this.mailService.sendVerificationEmail(email, fullName, token);
+
+		const frontendUrl = ENV_KEY.FRONTEND_URL(this.configService);
+		const url = `${frontendUrl}/auth/verify?token=${token}`;
+
+		await this.mailService.sendMail({
+			to: email,
+			subject: "Xác thực tài khoản OTA-Hub",
+			template: "./verification",
+			context: {
+				name: fullName,
+				url,
+			},
+		});
 
 		return savedUser;
 	}
