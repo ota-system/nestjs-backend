@@ -1,4 +1,4 @@
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 
 export const ENV_KEY = {
 	DB_HOST: (config: ConfigService) =>

@@ -1,4 +1,4 @@
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import { ENV_KEY } from "../constants/env.constant";
 
 export const getRedisConfig = (configService: ConfigService | any) => ({

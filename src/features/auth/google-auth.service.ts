@@ -5,12 +5,13 @@ import { ENV_KEY } from "../../shared/constants/env.constant";
 
 @Injectable()
 export class GoogleAuthService {
-	constructor(
-		private readonly configService: ConfigService,
-		private client = new OAuth2Client(
+	private client: OAuth2Client;
+
+	constructor(private readonly configService: ConfigService) {
+		this.client = new OAuth2Client(
 			ENV_KEY.GOOGLE_CLIENT_ID(this.configService),
-		),
-	) {}
+		);
+	}
 
 	async verifyToken(idToken: string) {
 		try {

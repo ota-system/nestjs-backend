@@ -87,7 +87,7 @@ export class AuthService {
 
 	// ─── Token generation ──────────────────────────────────────────────────────
 
-	private async generateTokens(user: UserEntity): Promise<AuthTokensResDto> {
+	public async generateTokens(user: UserEntity): Promise<AuthTokensResDto> {
 		const payload = { sub: user.id, email: user.email, role: user.role };
 
 		const accessToken = await this.jwtService.signAsync(payload);
