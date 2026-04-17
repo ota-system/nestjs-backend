@@ -1,6 +1,5 @@
 import {
 	BadRequestException,
-	ForbiddenException,
 	Injectable,
 	NotFoundException,
 } from "@nestjs/common";
@@ -35,14 +34,9 @@ export class UserService {
 
 	async updateUserRole(
 		currentUserId: string,
-		userId: string,
 		newRole: UserRole,
 	): Promise<AuthTokensResDto> {
-		if (currentUserId !== userId) {
-			throw new ForbiddenException("Không thể cập nhật vai trò của người khác");
-		}
-
-		const user = await this.userRepository.findOneBy({ id: userId });
+		const user = await this.userRepository.findOneBy({ id: currentUserId });
 
 		if (!user) {
 			throw new NotFoundException("Người dùng không tồn tại");
@@ -58,6 +52,6 @@ export class UserService {
 	}
 
 	private canUserUpdateRole(user: UserEntity): boolean {
-		return user.role === undefined && user.googleId !== undefined;
+		return user.role === null && user.googleId !== null;
 	}
 }

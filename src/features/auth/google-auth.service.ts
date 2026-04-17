@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { OAuth2Client } from "google-auth-library";
 import { ENV_KEY } from "../../shared/constants/env.constant";
@@ -10,26 +10,45 @@ export class GoogleAuthService {
 	constructor(private readonly configService: ConfigService) {
 		this.client = new OAuth2Client(
 			ENV_KEY.GOOGLE_CLIENT_ID(this.configService),
+			ENV_KEY.GOOGLE_CLIENT_SECRET(this.configService),
+			"postmessage",
 		);
 	}
 
-	async verifyToken(idToken: string) {
+	async verifyAuthCode(authCode: string) {
 		try {
+			const { tokens } = await this.client.getToken({
+				code: authCode,
+			});
+
+			if (!tokens.id_token) {
+				throw new UnauthorizedException("Không nhận được ID token từ Google");
+			}
+
 			const ticket = await this.client.verifyIdToken({
-				idToken,
+				idToken: tokens.id_token,
 				audience: ENV_KEY.GOOGLE_CLIENT_ID(this.configService),
 			});
 
 			const payload = ticket.getPayload();
 
+			if (!payload || !payload.sub || !payload.email) {
+				throw new UnauthorizedException("Dữ liệu token không hợp lệ");
+			}
+
+			if (!payload.email_verified) {
+				throw new UnauthorizedException("Email chưa được xác minh");
+			}
+
 			return {
-				email: payload?.email,
-				name: payload?.name,
-				picture: payload?.picture,
-				googleId: payload?.sub,
+				googleId: payload.sub,
+				email: payload.email,
+				name: payload.name,
+				avatar: payload.picture,
 			};
 		} catch (error) {
-			throw new UnauthorizedException("Invalid Google token");
+			Logger.error("Lỗi xác thực Google:", error);
+			throw new UnauthorizedException("Mã xác thực Google không hợp lệ");
 		}
 	}
 }

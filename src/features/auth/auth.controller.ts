@@ -63,13 +63,13 @@ export class AuthController {
 	}
 
 	@Post("google")
-	async googleLogin(@Body("idToken") idToken: string) {
-		const user = await this.googleAuthService.verifyToken(idToken);
+	async googleLogin(@Body("authCode") authCode: string) {
+		const user = await this.googleAuthService.verifyAuthCode(authCode);
 		const tokens = await this.authService.loginGoogle(
 			user.googleId || "",
 			user.email || "",
 			user.name || "",
-			user.picture,
+			user.avatar,
 		);
 		return BaseResponse.ok(tokens, "Google login successful");
 	}

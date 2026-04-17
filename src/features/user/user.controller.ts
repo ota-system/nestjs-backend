@@ -3,7 +3,6 @@ import {
 	Controller,
 	Get,
 	HttpCode,
-	Param,
 	Patch,
 	Req,
 	UseGuards,
@@ -25,7 +24,7 @@ export class UserController {
 	@ApiBearerAuth()
 	async getCurrentUserProfile(@Req() req) {
 		const userInfo: UserResponseDto = await this.userService.findUserById(
-			req.user.userId,
+			req.user.sub,
 		);
 		return BaseResponse.ok(
 			userInfo,
@@ -33,18 +32,13 @@ export class UserController {
 		);
 	}
 
-	@Patch(":id")
+	@Patch("/setup-role")
 	@HttpCode(200)
 	@UseGuards(JwtAuthGuard)
 	@ApiBearerAuth()
-	async setupUserRole(
-		@Req() req,
-		@Body() updateRoleDto: UpdateRoleRequest,
-		@Param("id") id: string,
-	) {
+	async setupUserRole(@Req() req, @Body() updateRoleDto: UpdateRoleRequest) {
 		const tokenResponse = await this.userService.updateUserRole(
-			req.user.userId,
-			id,
+			req.user.sub,
 			updateRoleDto.role,
 		);
 		return BaseResponse.ok(tokenResponse, "Cập nhật role thành công");
