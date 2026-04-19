@@ -167,12 +167,8 @@ export class AuthService {
 		googleId: string,
 		email: string,
 		fullName: string,
-		avartarUrl: string | undefined,
+		avatarUrl: string | undefined,
 	): Promise<AuthTokensResDto> {
-		if (!email) {
-			throw new BadRequestException("Email không hợp lệ");
-		}
-
 		let user = await this.userRepository.findOne({
 			where: { email },
 		});
@@ -184,7 +180,7 @@ export class AuthService {
 				provider: "google",
 				isActive: true,
 				fullName: fullName,
-				avatarUrl: avartarUrl,
+				avatarUrl: avatarUrl,
 			});
 
 			await this.userRepository.save(user);
@@ -192,9 +188,10 @@ export class AuthService {
 
 		if (!user.isActive) {
 			user.isActive = true;
+			await this.userRepository.save(user);
 		}
 
-		return await this.generateTokens(user);
+		return this.generateTokens(user);
 	}
 
 	async signout(

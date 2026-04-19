@@ -1,7 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { OAuth2Client } from "google-auth-library";
-import { ENV_KEY } from "../../shared/constants/env.constant";
+import { ENV_KEY } from "../../../shared/constants/env.constant";
 
 @Injectable()
 export class GoogleAuthService {

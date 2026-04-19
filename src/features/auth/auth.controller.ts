@@ -12,13 +12,13 @@ import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import { AuthService } from "./auth.service";
 import type { JwtRequest } from "./auth.type";
 import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
-import { LoginRequestDto } from "./dto/login-req.dto";
+import { SignInRequestDto } from "./dto/sign-in-req.dto";
 import { SignOutDto } from "./dto/sign-out.dto";
 import { SignUpDto } from "./dto/sign-up.dto";
 import type { SignUpResDto } from "./dto/sign-up-res.dto";
 import { VerifyTokenDto } from "./dto/verify-token.dto";
-import { GoogleAuthService } from "./google-auth.service";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
+import { GoogleAuthService } from "./infras/google-auth.service";
 
 @Controller({ path: "auth", version: "1" })
 export class AuthController {
@@ -57,12 +57,13 @@ export class AuthController {
 
 	@Post("login")
 	@HttpCode(200)
-	async login(@Body() dto: LoginRequestDto, @I18n() i18n: I18nContext) {
+	async login(@Body() dto: SignInRequestDto, @I18n() i18n: I18nContext) {
 		const tokens = await this.authService.loginLocal(dto.email, dto.password);
 		return BaseResponse.ok(tokens, await i18n.t("auth.LOGIN_SUCCESS"));
 	}
 
 	@Post("google")
+	@HttpCode(200)
 	async googleLogin(@Body("authCode") authCode: string) {
 		const user = await this.googleAuthService.verifyAuthCode(authCode);
 		const tokens = await this.authService.loginGoogle(

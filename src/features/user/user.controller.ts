@@ -10,7 +10,7 @@ import {
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { UpdateRoleRequest } from "./dtos/update-role.req.dto";
+import { UpdateRoleRequestDto } from "./dtos/update-role.req.dto";
 import { UserResponseDto } from "./dtos/user-res.dto";
 import { UserService } from "./user.service";
 
@@ -36,7 +36,7 @@ export class UserController {
 	@HttpCode(200)
 	@UseGuards(JwtAuthGuard)
 	@ApiBearerAuth()
-	async setupUserRole(@Req() req, @Body() updateRoleDto: UpdateRoleRequest) {
+	async setupUserRole(@Req() req, @Body() updateRoleDto: UpdateRoleRequestDto) {
 		const tokenResponse = await this.userService.updateUserRole(
 			req.user.sub,
 			updateRoleDto.role,

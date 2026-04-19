@@ -11,7 +11,7 @@ export class UserResponseDto {
 	email!: string;
 
 	@Expose()
-	role!: string;
+	role!: string | null;
 
 	@Expose()
 	avatarUrl!: string | null;
