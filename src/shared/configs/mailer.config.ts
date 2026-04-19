@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import { HandlebarsAdapter } from "@nestjs-modules/mailer/adapters/handlebars.adapter";
 import { ENV_KEY } from "../constants/env.constant";
 

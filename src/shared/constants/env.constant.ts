@@ -1,4 +1,4 @@
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 
 export const ENV_KEY = {
 	DB_HOST: (config: ConfigService) =>
@@ -52,4 +52,10 @@ export const ENV_KEY = {
 
 	CORS_ORIGINS: (config: ConfigService) =>
 		config.get<string>("CORS_ORIGINS", "http://localhost:5173"),
+
+	GOOGLE_CLIENT_ID: (config: ConfigService) =>
+		config.get<string>("GOOGLE_CLIENT_ID", ""),
+
+	GOOGLE_CLIENT_SECRET: (config: ConfigService) =>
+		config.get<string>("GOOGLE_CLIENT_SECRET", ""),
 };

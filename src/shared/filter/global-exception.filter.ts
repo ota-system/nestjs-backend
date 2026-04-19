@@ -3,6 +3,7 @@ import {
 	Catch,
 	type ExceptionFilter,
 	HttpException,
+	Logger,
 } from "@nestjs/common";
 import type { Request, Response } from "express";
 import { I18nService } from "nestjs-i18n";
@@ -46,6 +47,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 			if (typeof responseBody === "object" && responseBody !== null) {
 				message = (responseBody as any).message || message;
 			}
+		} else {
+			Logger.error(exception.message, exception.stack, "GlobalExceptionFilter");
 		}
 
 		const errorResponse = new ErrorResponseDto(
