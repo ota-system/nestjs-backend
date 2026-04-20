@@ -100,7 +100,7 @@ export class AuthService {
 
 	// ─── Token generation ──────────────────────────────────────────────────────
 
-	private async generateTokens(user: UserEntity): Promise<AuthTokensResDto> {
+	public async generateTokens(user: UserEntity): Promise<AuthTokensResDto> {
 		const sessionId = randomUUID();
 		const payload = {
 			sub: user.id,
@@ -139,6 +139,59 @@ export class AuthService {
 	private async checkEmailExists(email: string): Promise<boolean> {
 		const user = await this.userRepository.findOne({ where: { email } });
 		return !!user;
+	}
+
+	async loginLocal(email: string, password: string) {
+		const user: UserEntity | null = await this.userRepository.findOne({
+			where: { email },
+		});
+		if (!user) {
+			throw new BadRequestException("Email hoặc mật khẩu không chính xác");
+		}
+		if (!user.isActive) {
+			throw new BadRequestException("Tài khoản chưa được xác thực.");
+		}
+
+		const isPasswordCorrect = await bcrypt.compare(
+			password,
+			user.hashedPassword || "",
+		);
+		if (!isPasswordCorrect) {
+			throw new BadRequestException("Email hoặc mật khẩu không chính xác");
+		}
+
+		return await this.generateTokens(user);
+	}
+
+	async loginGoogle(
+		googleId: string,
+		email: string,
+		fullName: string,
+		avatarUrl: string | undefined,
+	): Promise<AuthTokensResDto> {
+		let user = await this.userRepository.findOne({
+			where: { email },
+		});
+
+		if (!user) {
+			user = this.userRepository.create({
+				googleId: googleId,
+				email,
+				provider: "google",
+				isActive: true,
+				fullName: fullName,
+				avatarUrl: avatarUrl,
+			});
+
+			await this.userRepository.save(user);
+		}
+
+		if (!user.isActive) {
+			user.isActive = true;
+			await this.userRepository.save(user);
+		}
+
+		return this.generateTokens(user);
 	}
 
 	async signout(

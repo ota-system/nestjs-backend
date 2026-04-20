@@ -9,6 +9,7 @@ import { SharedModule } from "../../shared/shared.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { UserEntity } from "./entities/user.entity";
+import { GoogleAuthService } from "./infras/google-auth.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 
 @Module({
@@ -24,7 +25,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 		SharedModule,
 	],
 	controllers: [AuthController],
-	providers: [AuthService, JwtStrategy],
-	exports: [AuthService],
+	providers: [AuthService, JwtStrategy, GoogleAuthService],
+	exports: [AuthService, JwtStrategy],
 })
 export class AuthModule {}
