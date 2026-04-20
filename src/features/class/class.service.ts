@@ -2,13 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CreateClassDto } from "./dtos/create-class.dto";
-import { Class } from "./entities/class.entity";
+import { ClassEntity } from "./entities/class.entity";
 
 @Injectable()
 export class ClassService {
 	constructor(
-		@InjectRepository(Class)
-		private readonly classRepository: Repository<Class>,
+		@InjectRepository(ClassEntity)
+		private readonly classRepository: Repository<ClassEntity>,
 	) {}
 
 	async createClass(dto: CreateClassDto) {

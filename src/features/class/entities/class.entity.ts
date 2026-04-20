@@ -1,20 +1,9 @@
-import {
-	Column,
-	CreateDateColumn,
-	DeleteDateColumn,
-	Entity,
-	JoinColumn,
-	ManyToOne,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn,
-} from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
+import { BaseEntity } from "../../../shared/entity/base.entity";
 import { UserEntity } from "../../auth/entities/user.entity";
 
-@Entity()
-export class Class {
-	@PrimaryGeneratedColumn("uuid")
-	id!: string;
-
+@Entity({ name: "classes" })
+export class ClassEntity extends BaseEntity {
 	@Column()
 	name!: string;
 
@@ -25,15 +14,6 @@ export class Class {
 	@JoinColumn({ name: "teacher_id" })
 	teacher!: UserEntity;
 
-	@Column()
+	@Column({ unique: true })
 	code!: string;
-
-	@CreateDateColumn({ name: "created_at" })
-	createdAt!: Date;
-
-	@UpdateDateColumn({ name: "updated_at" })
-	updatedAt?: Date;
-
-	@DeleteDateColumn({ name: "deleted_at" })
-	deletedAt?: Date;
 }

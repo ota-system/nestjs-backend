@@ -9,7 +9,7 @@ import {
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
-import { Class } from "../../class/entities/class.entity";
+import { ClassEntity } from "../../class/entities/class.entity";
 import { UserRole } from "./user-role.enum";
 
 @Entity("users")
@@ -63,8 +63,8 @@ export class UserEntity {
 	deletedAt?: Date;
 
 	@OneToMany(
-		() => Class,
+		() => ClassEntity,
 		(classes) => classes.teacher,
 	)
-	classes?: Class[];
+	classes?: ClassEntity[];
 }
