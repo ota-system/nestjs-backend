@@ -6,6 +6,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { I18nModule } from "nestjs-i18n";
 import { AuthModule } from "./features/auth/auth.module";
+import { ClassModule } from "./features/class/class.module";
 import { HealthModule } from "./features/health/health.module";
 import { UserModule } from "./features/user/user.module";
 import { getBullConfig } from "./shared/configs/bull.config";
@@ -60,6 +61,7 @@ import { SharedModule } from "./shared/shared.module";
 		SharedModule,
 		HealthModule,
 		AuthModule,
+		ClassModule,
 	],
 })
 export class AppModule {}
