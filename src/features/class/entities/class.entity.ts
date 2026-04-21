@@ -10,7 +10,7 @@ export class ClassEntity extends BaseEntity {
 	@Column()
 	subject!: string;
 
-	@ManyToOne(() => UserEntity)
+	@ManyToOne(() => UserEntity, { nullable: false, onDelete: "CASCADE" })
 	@JoinColumn({ name: "teacher_id" })
 	teacher!: UserEntity;
 
