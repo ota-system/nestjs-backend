@@ -8,6 +8,7 @@ import {
 	UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
+import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
 import { Roles } from "../../shared/decorators/roles.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
@@ -15,6 +16,7 @@ import { UserRole } from "../auth/entities/user-role.enum";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/role.guard";
 import { ClassService } from "./class.service";
+import { ClassResponseDto, UserSummaryDto } from "./dtos/class-res.dto";
 import { CreateClassRequestDto } from "./dtos/create-class-req.dto";
 
 @Controller({ path: "classes", version: "1" })
@@ -54,8 +56,10 @@ export class ClassController {
 		const role: UserRole = req.user.role;
 		const classes = await this.classService.getClassList(userId, role);
 		return BaseResponse.ok(
-			classes,
-			i18n.t("class.GET_LIST_SUCCESS", {
+			plainToInstance(ClassResponseDto, classes, {
+				excludeExtraneousValues: true,
+			}),
+			i18n.t("class.GET_CLASS_LIST_SUCCESS", {
 				defaultValue: "Get class list successfully",
 			}),
 		);
@@ -67,9 +71,26 @@ export class ClassController {
 	async getClassDetail(@I18n() i18n: I18nContext, @Param("id") id: string) {
 		const classroom = await this.classService.getClassDetail(id);
 		return BaseResponse.ok(
-			classroom,
-			i18n.t("class.GET_DETAIL_SUCCESS", {
+			plainToInstance(ClassResponseDto, classroom, {
+				excludeExtraneousValues: true,
+			}),
+			i18n.t("class.GET_CLASS_DETAIL_SUCCESS", {
 				defaultValue: "Get class detail successfully",
+			}),
+		);
+	}
+
+	@Get(":id/students")
+	@UseGuards(JwtAuthGuard)
+	@ApiBearerAuth()
+	async getStudentsInClass(@I18n() i18n: I18nContext, @Param("id") id: string) {
+		const students = await this.classService.getStudentsInClass(id);
+		return BaseResponse.ok(
+			plainToInstance(UserSummaryDto, students, {
+				excludeExtraneousValues: true,
+			}),
+			i18n.t("class.GET_STUDENTS_SUCCESS", {
+				defaultValue: "Get students in class successfully",
 			}),
 		);
 	}

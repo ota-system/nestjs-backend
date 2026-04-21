@@ -69,4 +69,15 @@ export class ClassService {
 		}
 		return classroom;
 	}
+
+	async getStudentsInClass(classId: string) {
+		const classroom = await this.classRepository.findOne({
+			where: { id: classId },
+			relations: ["students", "students.student"],
+		});
+		if (!classroom) {
+			throw new NotFoundException("Class not found");
+		}
+		return classroom.students?.map((sc) => sc.student) || [];
+	}
 }
