@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { UserRole } from "../auth/entities/user-role.enum";
 import { CreateClassDto } from "./dtos/create-class.dto";
 import { ClassEntity } from "./entities/class.entity";
 
@@ -40,5 +41,32 @@ export class ClassService {
 		} while (isExisted);
 
 		return code;
+	}
+
+	// Get Class list base on role (Teacher: get class created by teacher, Student: get class joined by student)
+	async getClassList(userId: string, role: string) {
+		if (role === UserRole.TEACHER) {
+			return await this.classRepository.find({
+				where: { teacher: { id: userId } },
+				order: { createdAt: "DESC" },
+			});
+		} else if (role === UserRole.STUDENT) {
+			return await this.classRepository.find({
+				where: { students: { student: { id: userId } } },
+				order: { createdAt: "DESC" },
+			});
+		}
+		return [];
+	}
+
+	async getClassDetail(classId: string) {
+		const classroom = await this.classRepository.findOne({
+			where: { id: classId },
+			relations: ["teacher"],
+		});
+		if (!classroom) {
+			throw new NotFoundException("Class not found");
+		}
+		return classroom;
 	}
 }

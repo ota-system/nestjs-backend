@@ -10,6 +10,7 @@ import {
 	UpdateDateColumn,
 } from "typeorm";
 import { ClassEntity } from "../../class/entities/class.entity";
+import { StudentClassEntity } from "../../class/entities/student-class.entity";
 import { UserRole } from "./user-role.enum";
 
 @Entity("users")
@@ -19,17 +20,17 @@ export class UserEntity {
 	@PrimaryGeneratedColumn("uuid")
 	id!: string;
 
-	@Column({ name: "full-name", type: "varchar", length: 100, nullable: false })
+	@Column({ name: "full_name", type: "varchar", length: 100, nullable: false })
 	fullName!: string;
 
 	@Exclude()
-	@Column({ name: "hashed-password", type: "text", nullable: true })
+	@Column({ name: "hashed_password", type: "text", nullable: true })
 	hashedPassword?: string;
 
-	@Column({ name: "google-id", type: "varchar", nullable: true, unique: true })
+	@Column({ name: "google_id", type: "varchar", nullable: true, unique: true })
 	googleId?: string;
 
-	@Column({ name: "avatar-url", type: "text", nullable: true })
+	@Column({ name: "avatar_url", type: "text", nullable: true })
 	avatarUrl?: string;
 
 	@Column({ type: "varchar", length: 100, nullable: false, unique: true })
@@ -48,9 +49,9 @@ export class UserEntity {
 		length: 20,
 		default: "local",
 	})
-	provider!: string; //2 options: 'local' | 'google'
+	provider!: string; // 'local' | 'google'
 
-	@Column({ default: true })
+	@Column({ name: "is_active", default: true })
 	isActive!: boolean;
 
 	@CreateDateColumn({ name: "created_at" })
@@ -66,5 +67,11 @@ export class UserEntity {
 		() => ClassEntity,
 		(classes) => classes.teacher,
 	)
-	classes?: ClassEntity[];
+	teacherClasses?: ClassEntity[];
+
+	@OneToMany(
+		() => StudentClassEntity,
+		(sc) => sc.student,
+	)
+	studentClasses?: StudentClassEntity[];
 }

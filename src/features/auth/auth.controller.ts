@@ -64,7 +64,10 @@ export class AuthController {
 
 	@Post("google")
 	@HttpCode(200)
-	async googleLogin(@Body("authCode") authCode: string) {
+	async googleLogin(
+		@Body("authCode") authCode: string,
+		@I18n() i18n: I18nContext,
+	) {
 		const user = await this.googleAuthService.verifyAuthCode(authCode);
 		const tokens = await this.authService.loginGoogle(
 			user.googleId || "",
@@ -72,7 +75,7 @@ export class AuthController {
 			user.name || "",
 			user.avatar,
 		);
-		return BaseResponse.ok(tokens, "Google login successful");
+		return BaseResponse.ok(tokens, await i18n.t("auth.GOOGLE_LOGIN_SUCCESS"));
 	}
 
 	@Post("sign-out")
