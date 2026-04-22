@@ -48,6 +48,7 @@ export class ClassController {
 
 	// Get Class list base on role (Teacher: get class created by teacher, Student: get class joined by student)
 	// plainToInstance is used to transform ClassEntity to ClassResponseDto
+	@Get()
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER, UserRole.STUDENT)
@@ -59,39 +60,51 @@ export class ClassController {
 			plainToInstance(ClassResponseDto, classes, {
 				excludeExtraneousValues: true,
 			}),
-			i18n.t("class.GET_CLASS_LIST_SUCCESS", {
-				defaultValue: "Get class list successfully",
-			}),
+			i18n.t("class.GET_CLASS_LIST_SUCCESS"),
 		);
 	}
 
 	@Get(":id")
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@ApiBearerAuth()
-	async getClassDetail(@I18n() i18n: I18nContext, @Param("id") id: string) {
-		const classroom = await this.classService.getClassDetail(id);
+	@Roles(UserRole.TEACHER, UserRole.STUDENT)
+	async getClassDetail(
+		@I18n() i18n: I18nContext,
+		@Param("id") id: string,
+		@Req() req: any,
+	) {
+		const userId: string = req.user.sub;
+		const role: UserRole = req.user.role;
+		const classroom = await this.classService.getClassDetail(id, userId, role);
 		return BaseResponse.ok(
 			plainToInstance(ClassResponseDto, classroom, {
 				excludeExtraneousValues: true,
 			}),
-			i18n.t("class.GET_CLASS_DETAIL_SUCCESS", {
-				defaultValue: "Get class detail successfully",
-			}),
+			i18n.t("class.GET_CLASS_DETAIL_SUCCESS"),
 		);
 	}
 
 	@Get(":id/students")
-	@UseGuards(JwtAuthGuard)
+	@UseGuards(JwtAuthGuard, RolesGuard)
 	@ApiBearerAuth()
-	async getStudentsInClass(@I18n() i18n: I18nContext, @Param("id") id: string) {
-		const students = await this.classService.getStudentsInClass(id);
+	@Roles(UserRole.TEACHER, UserRole.STUDENT)
+	async getStudentsInClass(
+		@I18n() i18n: I18nContext,
+		@Param("id") id: string,
+		@Req() req: any,
+	) {
+		const userId: string = req.user.sub;
+		const role: UserRole = req.user.role;
+		const students = await this.classService.getStudentsInClass(
+			id,
+			userId,
+			role,
+		);
 		return BaseResponse.ok(
 			plainToInstance(UserSummaryDto, students, {
 				excludeExtraneousValues: true,
 			}),
-			i18n.t("class.GET_STUDENTS_SUCCESS", {
-				defaultValue: "Get students in class successfully",
-			}),
+			i18n.t("class.GET_STUDENTS_SUCCESS"),
 		);
 	}
 }

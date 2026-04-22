@@ -1,22 +1,10 @@
-import {
-	Column,
-	CreateDateColumn,
-	Entity,
-	JoinColumn,
-	ManyToOne,
-	PrimaryGeneratedColumn,
-} from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
+import { BaseEntity } from "../../../shared/entity/base.entity";
 import { UserEntity } from "../../auth/entities/user.entity";
 import { ClassEntity } from "./class.entity";
 
 @Entity("student_classes")
-export class StudentClassEntity {
-	@PrimaryGeneratedColumn("uuid")
-	id!: string;
-
-	@CreateDateColumn({ name: "created_at" })
-	createdAt!: Date;
-
+export class StudentClassEntity extends BaseEntity {
 	@Column({ default: "active" })
 	status!: string;
 

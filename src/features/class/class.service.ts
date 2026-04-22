@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+	ForbiddenException,
+	Injectable,
+	NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { UserRole } from "../auth/entities/user-role.enum";
@@ -43,7 +47,6 @@ export class ClassService {
 		return code;
 	}
 
-	// Get Class list base on role (Teacher: get class created by teacher, Student: get class joined by student)
 	async getClassList(userId: string, role: string) {
 		if (role === UserRole.TEACHER) {
 			return await this.classRepository.find({
@@ -59,25 +62,30 @@ export class ClassService {
 		return [];
 	}
 
-	async getClassDetail(classId: string) {
+	async getClassDetail(classId: string, userId: string, role: string) {
 		const classroom = await this.classRepository.findOne({
 			where: { id: classId },
-			relations: ["teacher"],
+			relations: ["teacher", "students", "students.student"],
 		});
 		if (!classroom) {
-			throw new NotFoundException("Class not found");
+			throw new NotFoundException("Không tìm thấy lớp học");
 		}
+
+		const isTeacher =
+			role === UserRole.TEACHER && classroom.teacher.id === userId;
+		const isStudent =
+			role === UserRole.STUDENT &&
+			classroom.students?.some((sc) => sc.student.id === userId);
+
+		if (!isTeacher && !isStudent) {
+			throw new ForbiddenException("Bạn không có quyền truy cập lớp học này");
+		}
+
 		return classroom;
 	}
 
-	async getStudentsInClass(classId: string) {
-		const classroom = await this.classRepository.findOne({
-			where: { id: classId },
-			relations: ["students", "students.student"],
-		});
-		if (!classroom) {
-			throw new NotFoundException("Class not found");
-		}
+	async getStudentsInClass(classId: string, userId: string, role: string) {
+		const classroom = await this.getClassDetail(classId, userId, role);
 		return classroom.students?.map((sc) => sc.student) || [];
 	}
 }
