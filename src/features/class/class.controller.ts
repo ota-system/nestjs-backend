@@ -47,7 +47,7 @@ export class ClassController {
 	}
 
 	// Get Class list base on role (Teacher: get class created by teacher, Student: get class joined by student)
-	@Get()
+	// plainToInstance is used to transform ClassEntity to ClassResponseDto
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER, UserRole.STUDENT)

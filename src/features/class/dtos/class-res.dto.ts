@@ -1,6 +1,7 @@
-import { Expose, Transform, Type } from "class-transformer";
+import { Expose, Type } from "class-transformer";
 import { UserRole } from "../../auth/entities/user-role.enum";
 
+// This DTO use for both Teacher and Student. (curently both of them have same response, but in the future if we want to add more field for teacher or student, we can easily extend this DTO)
 export class UserSummaryDto {
 	@Expose()
 	id!: string;
@@ -16,11 +17,6 @@ export class UserSummaryDto {
 
 	@Expose()
 	role?: UserRole;
-
-	@Expose()
-	//Because oof the avg score is not exist now => add transform to mock
-	@Transform(({ value }) => value ?? 5)
-	averageScore: number = 0;
 }
 
 export class ClassResponseDto {
