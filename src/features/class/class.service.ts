@@ -1,6 +1,11 @@
-import { Injectable } from "@nestjs/common";
+import {
+	ForbiddenException,
+	Injectable,
+	NotFoundException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { UserRole } from "../auth/entities/user-role.enum";
 import { CreateClassDto } from "./dtos/create-class.dto";
 import { ClassEntity } from "./entities/class.entity";
 
@@ -40,5 +45,47 @@ export class ClassService {
 		} while (isExisted);
 
 		return code;
+	}
+
+	async getClassList(userId: string, role: string) {
+		if (role === UserRole.TEACHER) {
+			return await this.classRepository.find({
+				where: { teacher: { id: userId } },
+				order: { createdAt: "DESC" },
+			});
+		} else if (role === UserRole.STUDENT) {
+			return await this.classRepository.find({
+				where: { students: { student: { id: userId } } },
+				order: { createdAt: "DESC" },
+			});
+		}
+		return [];
+	}
+
+	async getClassDetail(classId: string, userId: string, role: string) {
+		const classroom = await this.classRepository.findOne({
+			where: { id: classId },
+			relations: ["teacher", "students", "students.student"],
+		});
+		if (!classroom) {
+			throw new NotFoundException("Không tìm thấy lớp học");
+		}
+
+		const isTeacher =
+			role === UserRole.TEACHER && classroom.teacher.id === userId;
+		const isStudent =
+			role === UserRole.STUDENT &&
+			classroom.students?.some((sc) => sc.student.id === userId);
+
+		if (!isTeacher && !isStudent) {
+			throw new ForbiddenException("Bạn không có quyền truy cập lớp học này");
+		}
+
+		return classroom;
+	}
+
+	async getStudentsInClass(classId: string, userId: string, role: string) {
+		const classroom = await this.getClassDetail(classId, userId, role);
+		return classroom.students?.map((sc) => sc.student) || [];
 	}
 }

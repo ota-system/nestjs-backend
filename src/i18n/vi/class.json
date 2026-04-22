@@ -1,3 +1,6 @@
 {
-	"CREATED_SUCCESS": "Tạo lớp học thành công"
+	"CREATED_SUCCESS": "Tạo lớp học thành công",
+	"GET_CLASS_LIST_SUCCESS": "Lấy danh sách lớp học thành công",
+	"GET_CLASS_DETAIL_SUCCESS": "Lấy chi tiết lớp học thành công",
+	"GET_STUDENTS_SUCCESS": "Lấy sinh viên trong lớp học thành công"
 }
