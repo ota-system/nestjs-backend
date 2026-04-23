@@ -12,7 +12,7 @@ import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
 import { Roles } from "../../shared/decorators/roles.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
-import { UserRole } from "../auth/entities/user-role.enum";
+import { UserRole } from "../../shared/types/user-role.enum";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/role.guard";
 import { ClassService } from "./class.service";

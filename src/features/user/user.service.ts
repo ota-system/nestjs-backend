@@ -6,10 +6,10 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToInstance } from "class-transformer";
 import { Repository } from "typeorm";
+import { UserEntity } from "../../database/entities/user.entity";
+import { UserRole } from "../../shared/types/user-role.enum";
 import { AuthService } from "../auth/auth.service";
 import { AuthTokensResDto } from "../auth/dto/auth-tokens-res.dto";
-import { UserEntity } from "../auth/entities/user.entity";
-import { UserRole } from "../auth/entities/user-role.enum";
 import { UserResponseDto } from "./dtos/user-res.dto";
 
 @Injectable()
