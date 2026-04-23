@@ -1,13 +1,22 @@
 import { Module } from "@nestjs/common";
-import { TypeOrmModule } from "@nestjs/typeorm";
+import { ConfigService } from "@nestjs/config";
 import { OpenRouter } from "@openrouter/sdk";
 import { OpenRouterService } from "../../shared/infras/openRouter.service";
 import { SharedModule } from "../../shared/shared.module";
-import { UserEntity } from "../auth/entities/user.entity";
 import { TestGenerationController } from "./test-generation.controller";
 @Module({
-	imports: [TypeOrmModule.forFeature([UserEntity]), SharedModule],
-	providers: [OpenRouterService, OpenRouter],
+	imports: [SharedModule],
+	providers: [
+		OpenRouterService,
+		{
+			provide: OpenRouter,
+			useFactory: (configService: ConfigService) =>
+				new OpenRouter({
+					apiKey: configService.get<string>("OPENROUTER_API_KEY"),
+				}),
+			inject: [ConfigService],
+		},
+	],
 	controllers: [TestGenerationController],
 	exports: [],
 })

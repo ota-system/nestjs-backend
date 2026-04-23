@@ -3,47 +3,33 @@ import {
 	InternalServerErrorException,
 	MessageEvent,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
 import { OpenRouter } from "@openrouter/sdk";
 import { plainToInstance } from "class-transformer";
 import { Observable } from "rxjs";
 import { TeacherPromptResponseDto } from "../../features/test-generation/dtos/teacher-prompt.res.dto";
-import { ENV_KEY } from "../constants/env.constant";
+import QuestionObject from "../interface/QuestionObject";
 import prompts from "./prompts.json";
-
-interface QuestionObject {
-	id: string;
-	question: string;
-	topic: string;
-	difficulty: "easy" | "medium" | "hard";
-	options: string[];
-	question_type: "multiple_choice" | "true_false" | "fill_in_the_blank";
-	answer: string;
-	explanation: string;
-}
 
 @Injectable()
 export class OpenRouterService {
-	constructor(
-		private readonly openrouter: OpenRouter,
-		private readonly configService: ConfigService,
-	) {
-		const apiKey = ENV_KEY.OPENROUTER_API_KEY(this.configService);
-		if (!apiKey) {
-			throw new InternalServerErrorException(
-				"OPENROUTER_API_KEY is not configured",
-			);
-		}
-
-		this.openrouter = new OpenRouter({ apiKey });
-	}
+	constructor(private readonly openrouter: OpenRouter) {}
 
 	generateFromTeacherPromptStream(prompt: string): Observable<MessageEvent> {
 		return new Observable((subscriber) => {
-			(async () => {
+			let isCancelled = false;
+			let stream:
+				| (AsyncIterable<{
+						choices?: Array<{ delta?: { content?: string | null } }>;
+				  }> & {
+						return?: () =>
+							| Promise<IteratorResult<unknown>>
+							| IteratorResult<unknown>;
+				  })
+				| undefined;
+			void (async () => {
 				try {
 					let buffer = "";
-					const stream = await this.openrouter.chat.send({
+					stream = await this.openrouter.chat.send({
 						chatRequest: {
 							model: "openai/gpt-oss-120b",
 							messages: [
@@ -57,8 +43,17 @@ export class OpenRouterService {
 						},
 					});
 
+					if (isCancelled || subscriber.closed) {
+						await stream.return?.();
+						return;
+					}
+
 					for await (const chunk of stream) {
-						const content = chunk.choices[0]?.delta?.content;
+						if (isCancelled || subscriber.closed) {
+							await stream.return?.();
+							return;
+						}
+						const content = chunk.choices?.[0]?.delta?.content;
 						if (content) {
 							buffer += content;
 
@@ -67,6 +62,11 @@ export class OpenRouterService {
 							buffer = rest;
 
 							for (const questionObject of completed) {
+								if (isCancelled || subscriber.closed) {
+									await stream.return?.();
+									return;
+								}
+
 								const parsedQuestion = this.safeParseJsonObject(questionObject);
 								const mappedQuestion =
 									this.mapToTeacherPromptResponseDto(parsedQuestion);
@@ -75,24 +75,41 @@ export class OpenRouterService {
 						}
 					}
 
+					if (isCancelled || subscriber.closed) {
+						return;
+					}
+
 					const { completed: finalCompleted } =
 						this.extractCompletedQuestionObjects(buffer, true);
 					for (const questionObject of finalCompleted) {
+						if (isCancelled || subscriber.closed) {
+							return;
+						}
 						const parsedQuestion = this.safeParseJsonObject(questionObject);
 						const mappedQuestion =
 							this.mapToTeacherPromptResponseDto(parsedQuestion);
 						subscriber.next({ data: mappedQuestion } as MessageEvent);
 					}
 
+					if (isCancelled || subscriber.closed) {
+						return;
+					}
+
 					subscriber.next({ data: "[DONE]" } as MessageEvent);
 					subscriber.complete();
 				} catch (error) {
 					console.error("Stream Error:", error);
-					subscriber.error(
-						new InternalServerErrorException("Lỗi khi stream dữ liệu từ AI"),
-					);
+					if (!isCancelled && !subscriber.closed) {
+						subscriber.error(
+							new InternalServerErrorException("Lỗi khi stream dữ liệu từ AI"),
+						);
+					}
 				}
 			})();
+			return () => {
+				isCancelled = true;
+				void stream?.return?.();
+			};
 		});
 	}
 
