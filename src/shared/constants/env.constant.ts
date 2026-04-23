@@ -58,4 +58,7 @@ export const ENV_KEY = {
 
 	GOOGLE_CLIENT_SECRET: (config: ConfigService) =>
 		config.get<string>("GOOGLE_CLIENT_SECRET", ""),
+
+	OPENROUTER_API_KEY: (config: ConfigService) =>
+		config.get<string>("OPENROUTER_API_KEY", ""),
 };
