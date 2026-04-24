@@ -21,13 +21,13 @@ import { ClassService } from "./class.service";
 import { ClassResponseDto, UserSummaryDto } from "./dtos/class-res.dto";
 import { CreateClassRequestDto } from "./dtos/create-class-req.dto";
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth()
 @Controller({ path: "classes", version: "1" })
 export class ClassController {
 	constructor(private readonly classService: ClassService) {}
 
 	@Post()
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER)
 	async create(
 		@I18n() i18n: I18nContext,
@@ -40,19 +40,12 @@ export class ClassController {
 			subject: body.subject,
 			teacherId: userId,
 		});
-		return BaseResponse.ok(
-			classroom,
-			i18n.t("class.CREATED_SUCCESS", {
-				defaultValue: "Class created successfully",
-			}),
-		);
+		return BaseResponse.ok(classroom, i18n.t("class.CREATED_SUCCESS"));
 	}
 
 	// Get Class list base on role (Teacher: get class created by teacher, Student: get class joined by student)
 	// plainToInstance is used to transform ClassEntity to ClassResponseDto
 	@Get()
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER, UserRole.STUDENT)
 	async getClassList(@I18n() i18n: I18nContext, @Req() req: any) {
 		const userId: string = req.user.sub;
@@ -67,8 +60,6 @@ export class ClassController {
 	}
 
 	@Get(":id")
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER, UserRole.STUDENT)
 	async getClassDetail(
 		@I18n() i18n: I18nContext,
@@ -87,8 +78,6 @@ export class ClassController {
 	}
 
 	@Get(":id/students")
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER, UserRole.STUDENT)
 	async getStudentsInClass(
 		@I18n() i18n: I18nContext,

@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { BaseEntity } from "./base.entity";
 import { StudentClassEntity } from "./student-class.entity";
+
 import { TestEntity } from "./test.entity";
 import { UserEntity } from "./user.entity";
 

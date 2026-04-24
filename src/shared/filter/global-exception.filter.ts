@@ -34,7 +34,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 		if (exception instanceof BaseException) {
 			status = exception.status;
 			code = exception.code;
-			details = exception.details ?? null;
+			details =
+				exception.details?.map((detail) => ({
+					...detail,
+					message: this.i18n
+						? this.i18n.t(detail.messageKey)
+						: detail.messageKey,
+				})) || null;
 			message = code; // fallback: show code if i18n unavailable
 			if (this.i18n) {
 				try {

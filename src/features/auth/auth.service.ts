@@ -13,7 +13,7 @@ import { UserEntity } from "../../database/entities/user.entity";
 import { ENV_KEY } from "../../shared/constants/env.constant";
 import { MailService } from "../../shared/mail/mail.service";
 import { RedisService } from "../../shared/redis/redis.service";
-import { UserRole } from "../../shared/types/user-role.enum";
+import type { UserRole } from "../../shared/types/user-role.enum";
 import { RefreshJwtPayload } from "./auth.type";
 import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
 import type { SignUpDto } from "./dto/sign-up.dto";
