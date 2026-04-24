@@ -1,9 +1,11 @@
 import {
 	Body,
 	Controller,
+	ForbiddenException,
 	MessageEvent,
 	Post,
 	Query,
+	Req,
 	Sse,
 	UseGuards,
 } from "@nestjs/common";
@@ -14,6 +16,7 @@ import { Roles } from "../../shared/decorators/roles.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import { OpenRouterService } from "../../shared/infras/openRouter.service";
 import { UserRole } from "../../shared/types/user-role.enum";
+import type { JwtRequest } from "../auth/auth.type";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/role.guard";
 import { SavedTestRequestDto } from "./dtos/saved-test.req.dto";
@@ -41,8 +44,28 @@ export class TestGenerationController {
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER)
-	async saveTest(@Body() dto: SavedTestRequestDto, @I18n() i18n: I18nContext) {
-		const result = await this.testGenerationService.saveAIGeneratedTest(dto);
+	async saveTest(
+		@Body() dto: SavedTestRequestDto,
+		@I18n() i18n: I18nContext,
+		@Req() req: JwtRequest,
+	) {
+		const userId: string = req.user.sub;
+		console.log("Saving test for user:", userId, "with classId:", dto.classId);
+
+		const hasPermission =
+			await this.testGenerationService.checkTeacherPermission(
+				dto.classId,
+				userId,
+			);
+		if (!hasPermission) {
+			throw new ForbiddenException(
+				await i18n.t("test.SAVE_TEST_PERMISSION_DENIED"),
+			);
+		}
+
+		const result = await this.testGenerationService.saveAIGeneratedTest({
+			...dto,
+		});
 		if (!result) {
 			return;
 		}

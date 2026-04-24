@@ -3,20 +3,17 @@ import {
 	IsArray,
 	IsBoolean,
 	IsDateString,
+	IsEnum,
 	IsNotEmpty,
 	IsNumber,
 	IsString,
 } from "class-validator";
-import type {
+import {
 	Difficulty,
 	QuestionType,
 } from "../../../shared/interface/QuestionObject";
 
 class QuestionDto {
-	@IsString()
-	@IsNotEmpty()
-	id!: string;
-
 	@IsString()
 	@IsNotEmpty()
 	question!: string;
@@ -25,15 +22,16 @@ class QuestionDto {
 	@IsNotEmpty()
 	topic!: string;
 
-	@IsString()
+	@IsEnum(Difficulty)
 	@IsNotEmpty()
 	difficulty!: Difficulty;
 
 	@IsArray()
 	@ArrayMaxSize(4)
+	@IsString({ each: true })
 	options!: string[];
 
-	@IsString()
+	@IsEnum(QuestionType)
 	@IsNotEmpty()
 	questionType!: QuestionType;
 

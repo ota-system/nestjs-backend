@@ -20,11 +20,12 @@ export class QuestionSubscriber
 	}
 
 	async afterRemove(event: RemoveEvent<QuestionEntity>) {
-		await this.updateTotalQuestions(
-			event.manager,
-			event.databaseEntity.test.id,
-			-1,
-		);
+		const question = event.entity ?? event.databaseEntity;
+		const testId = question?.test?.id;
+		if (!testId) {
+			return;
+		}
+		await this.updateTotalQuestions(event.manager, testId, -1);
 	}
 
 	private async updateTotalQuestions(
@@ -32,11 +33,13 @@ export class QuestionSubscriber
 		id: string,
 		increment: number,
 	) {
-		await manager.increment(
-			TestEntity,
-			{ id: id },
-			"totalQuestions",
-			increment,
-		);
+		await manager
+			.createQueryBuilder()
+			.update(TestEntity)
+			.set({
+				totalQuestions: () => `COALESCE(totalQuestions, 0) + ${increment}`,
+			})
+			.where("id = :id", { id })
+			.execute();
 	}
 }

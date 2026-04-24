@@ -4,7 +4,7 @@ import { TestEntity } from "./test.entity";
 
 @Entity({ name: "topics" })
 export class TopicEntity extends BaseEntity {
-	@Column({ name: "topic_name" })
+	@Column({ name: "topic_name", unique: true })
 	topicName!: string;
 
 	@OneToMany(

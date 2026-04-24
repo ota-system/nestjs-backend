@@ -37,10 +37,10 @@ export class TestEntity extends BaseEntity {
 	@Column()
 	duration!: number;
 
-	@Column({ default: false })
+	@Column({ name: "anti_cheating", default: false })
 	antiCheating!: boolean;
 
-	@Column({ name: "total_questions", nullable: true })
+	@Column({ name: "total_questions", default: 0, nullable: false })
 	totalQuestions!: number;
 
 	@OneToMany(

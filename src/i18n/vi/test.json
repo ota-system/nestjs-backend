@@ -1,3 +1,4 @@
 {
-	"SAVE_TEST_SUCCESS": "Lưu đề thi thành công"
+	"SAVE_TEST_SUCCESS": "Lưu đề thi thành công",
+	"SAVE_TEST_PERMISSION_DENIED": "Bạn không có quyền lưu đề thi cho lớp này"
 }

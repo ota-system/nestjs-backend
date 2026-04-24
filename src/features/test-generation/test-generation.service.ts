@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { ClassEntity } from "../../database/entities/class.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
 import { TestEntity } from "../../database/entities/test.entity";
 import { TopicEntity } from "../../database/entities/topic.entity";
@@ -9,14 +10,11 @@ import { SavedTestRequestDto } from "./dtos/saved-test.req.dto";
 @Injectable()
 export class TestGenerationService {
 	constructor(
-		@InjectRepository(TopicEntity)
-		private readonly topicRepository: Repository<TopicEntity>,
-
-		@InjectRepository(QuestionEntity)
-		private readonly questionRepository: Repository<QuestionEntity>,
-
 		@InjectRepository(TestEntity)
 		private readonly testRepository: Repository<TestEntity>,
+
+		@InjectRepository(ClassEntity)
+		private readonly classRepository: Repository<ClassEntity>,
 	) {}
 
 	async saveAIGeneratedTest(dto: SavedTestRequestDto): Promise<boolean> {
@@ -75,5 +73,19 @@ export class TestGenerationService {
 		});
 
 		return true;
+	}
+
+	async checkTeacherPermission(
+		ClassId: string,
+		teacherId: string,
+	): Promise<boolean> {
+		const existingClass = await this.classRepository.findOne({
+			where: { id: ClassId },
+			relations: ["teacher"],
+		});
+		if (!existingClass) {
+			return false;
+		}
+		return existingClass.teacher.id === teacherId;
 	}
 }
