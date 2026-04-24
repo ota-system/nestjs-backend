@@ -98,10 +98,10 @@ export class ClassService {
 
 	async addStudentToClass(
 		studentId: string,
-		classCode: string,
+		classId: string,
 	): Promise<StudentClassEntity> {
 		const classroom = await this.classRepository.findOne({
-			where: { code: classCode },
+			where: { id: classId },
 		});
 
 		if (!classroom) {
@@ -123,6 +123,19 @@ export class ClassService {
 		});
 
 		return await this.studentClassRepository.save(studentClass);
+	}
+
+	async getClassByCode(code: string): Promise<ClassEntity> {
+		const classroom = await this.classRepository.findOne({
+			where: { code: code },
+			relations: ["teacher"],
+		});
+
+		if (!classroom) {
+			throw new NotFoundException("Không tìm thấy lớp học hoặc mã không đúng");
+		}
+
+		return classroom;
 	}
 
 	private async isUserExist(userId: string) {
