@@ -40,7 +40,7 @@ export class TestEntity extends BaseEntity {
 	@Column({ default: false })
 	antiCheating!: boolean;
 
-	@Column({ name: "total_questions" })
+	@Column({ name: "total_questions", nullable: true })
 	totalQuestions!: number;
 
 	@OneToMany(
