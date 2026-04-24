@@ -2,7 +2,7 @@ import {
 	ArrayMaxSize,
 	IsArray,
 	IsBoolean,
-	IsDate,
+	IsDateString,
 	IsNotEmpty,
 	IsNumber,
 	IsString,
@@ -35,7 +35,7 @@ class QuestionDto {
 
 	@IsString()
 	@IsNotEmpty()
-	question_type!: QuestionType;
+	questionType!: QuestionType;
 
 	@IsString()
 	@IsNotEmpty()
@@ -55,15 +55,15 @@ export class SavedTestRequestDto {
 	@IsNotEmpty()
 	classId!: string;
 
-	@IsDate()
+	@IsDateString()
 	@IsNotEmpty()
-	startedTime!: Date;
+	startedTime!: string;
 
 	@IsNumber()
 	@IsNotEmpty()
 	duration!: number;
 
-	@IsString()
+	@IsArray()
 	@IsNotEmpty()
 	questions!: QuestionDto[];
 
