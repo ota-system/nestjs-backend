@@ -5,5 +5,6 @@
 	"EMAIL_REQUIRED": "Email is required.",
 	"INVALID_INPUT": "Invalid input provided.",
 	"DEFAULT_ERROR": "An unexpected error occurred.",
-	"BAD_REQUEST": "Bad request."
+	"BAD_REQUEST": "Bad request.",
+	"ALREADY_JOINED_CLASS": "You have already joined this classroom"
 }
