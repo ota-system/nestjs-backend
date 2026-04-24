@@ -18,6 +18,8 @@ import { RolesGuard } from "../auth/guards/role.guard";
 import { ClassService } from "./class.service";
 import { ClassResponseDto, UserSummaryDto } from "./dtos/class-res.dto";
 import { CreateClassRequestDto } from "./dtos/create-class-req.dto";
+import { JoinClassRequestDto } from "./dtos/join-class-req.dto";
+import { StudentClassEntity } from "./entities/student-class.entity";
 
 @Controller({ path: "classes", version: "1" })
 export class ClassController {
@@ -105,6 +107,25 @@ export class ClassController {
 				excludeExtraneousValues: true,
 			}),
 			i18n.t("class.GET_STUDENTS_SUCCESS"),
+		);
+	}
+
+	@Post("/join")
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@ApiBearerAuth()
+	@Roles(UserRole.STUDENT)
+	async joinClass(
+		@I18n() i18n: I18nContext,
+		@Body() body: JoinClassRequestDto,
+		@Req() req: any,
+	) {
+		const userId: string = req.user.sub;
+		const studentClass: StudentClassEntity =
+			await this.classService.addStudentToClass(userId, body.code);
+
+		return BaseResponse.ok(
+			plainToInstance(ClassResponseDto, studentClass.class),
+			i18n.t("class.JOINED_CLASS_SUCCESS"),
 		);
 	}
 }
