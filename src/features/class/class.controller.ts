@@ -130,6 +130,8 @@ export class ClassController {
 	}
 
 	@Get("code/:code")
+	@UseGuards(JwtAuthGuard)
+	@ApiBearerAuth()
 	async getClassByCode(@I18n() i18n: I18nContext, @Param("code") code: string) {
 		const classroom: ClassEntity = await this.classService.getClassByCode(code);
 		return BaseResponse.ok(
