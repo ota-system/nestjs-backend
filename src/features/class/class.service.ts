@@ -5,9 +5,9 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { UserRole } from "../auth/entities/user-role.enum";
+import { ClassEntity } from "../../database/entities/class.entity";
+import { UserRole } from "../../shared/types/user-role.enum";
 import { CreateClassDto } from "./dtos/create-class.dto";
-import { ClassEntity } from "./entities/class.entity";
 
 @Injectable()
 export class ClassService {

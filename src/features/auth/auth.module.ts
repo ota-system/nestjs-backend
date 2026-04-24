@@ -4,11 +4,11 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { UserEntity } from "../../database/entities/user.entity";
 import { getJwtConfig } from "../../shared/configs/jwt.config";
 import { SharedModule } from "../../shared/shared.module";
 import { AuthController } from "./auth.controller";
 import { AuthService } from "./auth.service";
-import { UserEntity } from "./entities/user.entity";
 import { GoogleAuthService } from "./infras/google-auth.service";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 

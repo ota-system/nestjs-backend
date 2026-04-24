@@ -9,14 +9,14 @@ import { InjectRepository } from "@nestjs/typeorm";
 import * as bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import type { Repository } from "typeorm";
+import { UserEntity } from "../../database/entities/user.entity";
 import { ENV_KEY } from "../../shared/constants/env.constant";
 import { MailService } from "../../shared/mail/mail.service";
 import { RedisService } from "../../shared/redis/redis.service";
+import type { UserRole } from "../../shared/types/user-role.enum";
 import { RefreshJwtPayload } from "./auth.type";
 import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
 import type { SignUpDto } from "./dto/sign-up.dto";
-import { UserEntity } from "./entities/user.entity";
-import type { UserRole } from "./entities/user-role.enum";
 import { EmailAlreadyRegisteredException } from "./exception/email-already-register.exception";
 
 @Injectable()

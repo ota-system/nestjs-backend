@@ -9,7 +9,7 @@ import { ApiBearerAuth } from "@nestjs/swagger";
 import { Observable } from "rxjs";
 import { Roles } from "../../shared/decorators/roles.decorator";
 import { OpenRouterService } from "../../shared/infras/openRouter.service";
-import { UserRole } from "../auth/entities/user-role.enum";
+import { UserRole } from "../../shared/types/user-role.enum";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/role.guard";
 import { TeacherPromptRequestDto } from "./dtos/teacher-prompt.req.dto";
