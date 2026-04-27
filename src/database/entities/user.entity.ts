@@ -9,9 +9,9 @@ import {
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
-import { ClassEntity } from "../../class/entities/class.entity";
-import { StudentClassEntity } from "../../class/entities/student-class.entity";
-import { UserRole } from "./user-role.enum";
+import { UserRole } from "../../shared/types/user-role.enum";
+import { ClassEntity } from "./class.entity";
+import { StudentClassEntity } from "./student-class.entity";
 
 @Entity("users")
 @Index(["email"])

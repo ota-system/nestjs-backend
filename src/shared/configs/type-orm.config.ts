@@ -1,5 +1,6 @@
 import { ConfigService } from "@nestjs/config";
 import type { TypeOrmModuleOptions } from "@nestjs/typeorm";
+import { QuestionSubscriber } from "../../database/subscribers/QuestionSubscriber";
 import { ENV_KEY } from "../constants/env.constant";
 
 export const getTypeOrmConfig = (
@@ -12,5 +13,6 @@ export const getTypeOrmConfig = (
 	password: ENV_KEY.DB_PASSWORD(config),
 	database: ENV_KEY.DB_DATABASE(config),
 	autoLoadEntities: true,
+	subscribers: [QuestionSubscriber],
 	synchronize: false,
 });

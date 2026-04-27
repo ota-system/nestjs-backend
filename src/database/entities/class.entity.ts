@@ -1,7 +1,8 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
-import { BaseEntity } from "../../../shared/entity/base.entity";
-import { UserEntity } from "../../auth/entities/user.entity";
+import { BaseEntity } from "./base.entity";
 import { StudentClassEntity } from "./student-class.entity";
+import { TestEntity } from "./test.entity";
+import { UserEntity } from "./user.entity";
 
 @Entity({ name: "classes" })
 export class ClassEntity extends BaseEntity {
@@ -30,4 +31,10 @@ export class ClassEntity extends BaseEntity {
 		(sc) => sc.class,
 	)
 	students?: StudentClassEntity[];
+
+	@OneToMany(
+		() => TestEntity,
+		(test) => test.class,
+	)
+	tests?: TestEntity[];
 }
