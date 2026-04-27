@@ -1,23 +1,16 @@
-import {
-	Body,
-	Controller,
-	Get,
-	HttpCode,
-	Post,
-	Req,
-	UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, HttpCode, Post } from "@nestjs/common";
 import { I18n, I18nContext } from "nestjs-i18n";
+import { Auth } from "../../shared/decorators/auth.decorator";
+import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
+import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { AuthService } from "./auth.service";
-import type { JwtRequest } from "./auth.type";
 import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
 import { SignInRequestDto } from "./dto/sign-in-req.dto";
 import { SignOutDto } from "./dto/sign-out.dto";
 import { SignUpDto } from "./dto/sign-up.dto";
 import type { SignUpResDto } from "./dto/sign-up-res.dto";
 import { VerifyTokenDto } from "./dto/verify-token.dto";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { GoogleAuthService } from "./infras/google-auth.service";
 
 @Controller({ path: "auth", version: "1" })
@@ -79,26 +72,19 @@ export class AuthController {
 	}
 
 	@Post("sign-out")
-	@UseGuards(JwtAuthGuard)
+	@Auth()
 	@HttpCode(200)
 	async signOut(
-		@Req() req: JwtRequest,
+		@User() user: JwtPayload,
 		@Body() dto: SignOutDto,
 		@I18n() i18n: I18nContext,
 	): Promise<BaseResponse<null>> {
 		await this.authService.signout(
-			req.user.sub,
-			req.user.sid,
-			req.user.exp,
+			user.sub,
+			user.sid,
+			user.exp,
 			dto.refreshToken,
 		);
 		return BaseResponse.ok(null, await i18n.t("auth.SIGN_OUT_SUCCESS"));
-	}
-
-	@Get("abc")
-	@UseGuards(JwtAuthGuard)
-	@HttpCode(200)
-	async abc(@I18n() i18n: I18nContext): Promise<BaseResponse<string>> {
-		return BaseResponse.ok("ccccc", await i18n.t("auth.SIGN_OUT_SUCCESS"));
 	}
 }
