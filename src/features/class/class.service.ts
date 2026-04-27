@@ -5,11 +5,11 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { UserEntity } from "../auth/entities/user.entity";
-import { UserRole } from "../auth/entities/user-role.enum";
+import { ClassEntity } from "../../database/entities/class.entity";
+import { StudentClassEntity } from "../../database/entities/student-class.entity";
+import { UserEntity } from "../../database/entities/user.entity";
+import { UserRole } from "../../shared/types/user-role.enum";
 import { CreateClassDto } from "./dtos/create-class.dto";
-import { ClassEntity } from "./entities/class.entity";
-import { StudentClassEntity } from "./entities/student-class.entity";
 import { AlreadyJoinedException } from "./exceptions/already-joined.exception";
 
 @Injectable()

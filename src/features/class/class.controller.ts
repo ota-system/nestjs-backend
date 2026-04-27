@@ -10,16 +10,16 @@ import {
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
+import { ClassEntity } from "../../database/entities/class.entity";
+import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { Roles } from "../../shared/decorators/roles.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
-import { UserRole } from "../auth/entities/user-role.enum";
+import { UserRole } from "../../shared/types/user-role.enum";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/role.guard";
 import { ClassService } from "./class.service";
 import { ClassResponseDto, UserSummaryDto } from "./dtos/class-res.dto";
 import { CreateClassRequestDto } from "./dtos/create-class-req.dto";
-import { ClassEntity } from "./entities/class.entity";
-import { StudentClassEntity } from "./entities/student-class.entity";
 
 @Controller({ path: "classes", version: "1" })
 export class ClassController {

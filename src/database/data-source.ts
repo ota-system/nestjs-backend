@@ -1,9 +1,6 @@
-// TypeORM CLI configuration for database migrations
-
 import { config } from "dotenv";
 import { DataSource, type DataSourceOptions } from "typeorm";
 
-// Use dotenv(process) to load environment variables from .env file (just in this file, not globally)
 config();
 
 export const dataSourceOptions: DataSourceOptions = {
@@ -15,6 +12,7 @@ export const dataSourceOptions: DataSourceOptions = {
 	database: process.env.DB_DATABASE,
 	entities: [__dirname + "/../**/*.entity{.ts,.js}"],
 	migrations: ["dist/database/migrations/*.js"],
+	subscribers: ["dist/database/subscribers/*.js"],
 	synchronize: false,
 };
 

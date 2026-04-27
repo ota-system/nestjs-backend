@@ -1,7 +1,6 @@
 import {
 	Body,
 	Controller,
-	Get,
 	HttpCode,
 	Post,
 	Req,
@@ -93,12 +92,5 @@ export class AuthController {
 			dto.refreshToken,
 		);
 		return BaseResponse.ok(null, await i18n.t("auth.SIGN_OUT_SUCCESS"));
-	}
-
-	@Get("abc")
-	@UseGuards(JwtAuthGuard)
-	@HttpCode(200)
-	async abc(@I18n() i18n: I18nContext): Promise<BaseResponse<string>> {
-		return BaseResponse.ok("ccccc", await i18n.t("auth.SIGN_OUT_SUCCESS"));
 	}
 }
