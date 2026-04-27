@@ -10,6 +10,8 @@ import {
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
+import { ClassEntity } from "../../database/entities/class.entity";
+import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { Roles } from "../../shared/decorators/roles.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import { UserRole } from "../../shared/types/user-role.enum";
@@ -105,6 +107,38 @@ export class ClassController {
 				excludeExtraneousValues: true,
 			}),
 			i18n.t("class.GET_STUDENTS_SUCCESS"),
+		);
+	}
+
+	@Post(":id/join")
+	@UseGuards(JwtAuthGuard, RolesGuard)
+	@ApiBearerAuth()
+	@Roles(UserRole.STUDENT)
+	async joinClass(
+		@I18n() i18n: I18nContext,
+		@Param("id") classId: string,
+		@Req() req: any,
+	) {
+		const userId: string = req.user.sub;
+		const studentClass: StudentClassEntity =
+			await this.classService.addStudentToClass(userId, classId);
+
+		return BaseResponse.ok(
+			plainToInstance(ClassResponseDto, studentClass.class),
+			i18n.t("class.JOINED_CLASS_SUCCESS"),
+		);
+	}
+
+	@Get("code/:code")
+	@UseGuards(JwtAuthGuard)
+	@ApiBearerAuth()
+	async getClassByCode(@I18n() i18n: I18nContext, @Param("code") code: string) {
+		const classroom: ClassEntity = await this.classService.getClassByCode(code);
+		return BaseResponse.ok(
+			plainToInstance(ClassResponseDto, classroom, {
+				excludeExtraneousValues: true,
+			}),
+			i18n.t("class.GET_CLASS_DETAIL_SUCCESS"),
 		);
 	}
 }

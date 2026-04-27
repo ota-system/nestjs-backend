@@ -6,14 +6,21 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ClassEntity } from "../../database/entities/class.entity";
+import { StudentClassEntity } from "../../database/entities/student-class.entity";
+import { UserEntity } from "../../database/entities/user.entity";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { CreateClassDto } from "./dtos/create-class.dto";
+import { AlreadyJoinedException } from "./exceptions/already-joined.exception";
 
 @Injectable()
 export class ClassService {
 	constructor(
 		@InjectRepository(ClassEntity)
 		private readonly classRepository: Repository<ClassEntity>,
+		@InjectRepository(StudentClassEntity)
+		private readonly studentClassRepository: Repository<StudentClassEntity>,
+		@InjectRepository(UserEntity)
+		private readonly userRepository: Repository<UserEntity>,
 	) {}
 
 	async createClass(dto: CreateClassDto) {
@@ -87,5 +94,59 @@ export class ClassService {
 	async getStudentsInClass(classId: string, userId: string, role: string) {
 		const classroom = await this.getClassDetail(classId, userId, role);
 		return classroom.students?.map((sc) => sc.student) || [];
+	}
+
+	async addStudentToClass(
+		studentId: string,
+		classId: string,
+	): Promise<StudentClassEntity> {
+		const classroom = await this.classRepository.findOne({
+			where: { id: classId },
+		});
+
+		if (!classroom) {
+			throw new NotFoundException("Không tìm thấy lớp học hoặc mã không đúng");
+		}
+
+		if (!(await this.isUserExist(studentId))) {
+			throw new NotFoundException("Tài khoản không tồn tại");
+		}
+
+		if (await this.isStudentJoinedClass(studentId, classroom.id)) {
+			throw new AlreadyJoinedException();
+		}
+
+		const studentClass = this.studentClassRepository.create({
+			student: { id: studentId },
+			class: classroom,
+			status: "active",
+		});
+
+		return await this.studentClassRepository.save(studentClass);
+	}
+
+	async getClassByCode(code: string): Promise<ClassEntity> {
+		const classroom = await this.classRepository.findOne({
+			where: { code: code },
+			relations: ["teacher"],
+		});
+
+		if (!classroom) {
+			throw new NotFoundException("Không tìm thấy lớp học hoặc mã không đúng");
+		}
+
+		return classroom;
+	}
+
+	private async isUserExist(userId: string) {
+		return await this.userRepository.exists({
+			where: { id: userId },
+		});
+	}
+
+	private async isStudentJoinedClass(studentId: string, classId: string) {
+		return await this.studentClassRepository.exists({
+			where: { student: { id: studentId }, class: { id: classId } },
+		});
 	}
 }

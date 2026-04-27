@@ -5,5 +5,6 @@
 	"EMAIL_REQUIRED": "Email là bắt buộc.",
 	"INVALID_INPUT": "Dữ liệu nhập không hợp lệ.",
 	"DEFAULT_ERROR": "Đã có lỗi xảy ra.",
-	"BAD_REQUEST": "Yêu cầu không hợp lệ."
+	"BAD_REQUEST": "Yêu cầu không hợp lệ.",
+	"ALREADY_JOINED_CLASS": "Bạn đã tham gia lớp học này rồi"
 }
