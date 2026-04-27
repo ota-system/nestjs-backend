@@ -5,12 +5,12 @@ import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { AuthService } from "./auth.service";
-import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
-import { SignInRequestDto } from "./dto/sign-in-req.dto";
-import { SignOutDto } from "./dto/sign-out.dto";
-import { SignUpDto } from "./dto/sign-up.dto";
-import type { SignUpResDto } from "./dto/sign-up-res.dto";
-import { VerifyTokenDto } from "./dto/verify-token.dto";
+import type { AuthTokensResDto } from "./dtos/auth-tokens-res.dto";
+import { SignInRequestDto } from "./dtos/sign-in-req.dto";
+import { SignOutDto } from "./dtos/sign-out.dto";
+import { SignUpDto } from "./dtos/sign-up.dto";
+import type { SignUpResDto } from "./dtos/sign-up-res.dto";
+import { VerifyTokenDto } from "./dtos/verify-token.dto";
 import { GoogleAuthService } from "./infras/google-auth.service";
 
 @Controller({ path: "auth", version: "1" })

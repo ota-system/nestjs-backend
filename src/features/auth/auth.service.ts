@@ -1,8 +1,4 @@
-import {
-	BadRequestException,
-	Injectable,
-	NotFoundException,
-} from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -11,12 +7,13 @@ import { randomUUID } from "crypto";
 import type { Repository } from "typeorm";
 import { UserEntity } from "../../database/entities/user.entity";
 import { ENV_KEY } from "../../shared/constants/env.constant";
+import { BaseException } from "../../shared/exception/base.exception";
 import { MailService } from "../../shared/mail/mail.service";
 import { RedisService } from "../../shared/redis/redis.service";
 import type { UserRole } from "../../shared/types/user-role.enum";
 import { RefreshJwtPayload } from "./auth.type";
-import type { AuthTokensResDto } from "./dto/auth-tokens-res.dto";
-import type { SignUpDto } from "./dto/sign-up.dto";
+import type { AuthTokensResDto } from "./dtos/auth-tokens-res.dto";
+import type { SignUpDto } from "./dtos/sign-up.dto";
 import { EmailAlreadyRegisteredException } from "./exception/email-already-register.exception";
 
 @Injectable()
@@ -78,17 +75,17 @@ export class AuthService {
 		const userId = await this.redisService.getUserIdByToken(token);
 
 		if (!userId) {
-			throw new BadRequestException("Đường dẫn không hợp lệ hoặc đã hết hạn.");
+			throw new BaseException(400, "VERIFY_TOKEN_INVALID_OR_EXPIRED");
 		}
 
 		const user = await this.userRepository.findOne({ where: { id: userId } });
 
 		if (!user) {
-			throw new NotFoundException("Người dùng không tồn tại.");
+			throw new BaseException(404, "USER_NOT_FOUND");
 		}
 
 		if (user.isActive) {
-			throw new BadRequestException("Tài khoản đã được xác thực trước đó.");
+			throw new BaseException(400, "ACCOUNT_ALREADY_VERIFIED");
 		}
 
 		user.isActive = true;
@@ -146,10 +143,10 @@ export class AuthService {
 			where: { email },
 		});
 		if (!user) {
-			throw new BadRequestException("Email hoặc mật khẩu không chính xác");
+			throw new BaseException(400, "INVALID_CREDENTIALS");
 		}
 		if (!user.isActive) {
-			throw new BadRequestException("Tài khoản chưa được xác thực.");
+			throw new BaseException(400, "ACCOUNT_NOT_VERIFIED");
 		}
 
 		const isPasswordCorrect = await bcrypt.compare(
@@ -157,7 +154,7 @@ export class AuthService {
 			user.hashedPassword || "",
 		);
 		if (!isPasswordCorrect) {
-			throw new BadRequestException("Email hoặc mật khẩu không chính xác");
+			throw new BaseException(400, "INVALID_CREDENTIALS");
 		}
 
 		return await this.generateTokens(user);

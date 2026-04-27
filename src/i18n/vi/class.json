@@ -3,5 +3,5 @@
 	"GET_CLASS_LIST_SUCCESS": "Lấy danh sách lớp học thành công",
 	"GET_CLASS_DETAIL_SUCCESS": "Lấy chi tiết lớp học thành công",
 	"GET_STUDENTS_SUCCESS": "Lấy sinh viên trong lớp học thành công",
-	"JOIN_CLASS_SUCCESS": "Tham gia lớp học thành công"
+	"JOINED_CLASS_SUCCESS": "Tham gia lớp học thành công"
 }

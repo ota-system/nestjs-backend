@@ -34,14 +34,21 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 		if (exception instanceof BaseException) {
 			status = exception.status;
 			code = exception.code;
-			details =
-				exception.details?.map((detail) => ({
-					...detail,
-					message: this.i18n
-						? this.i18n.t(detail.messageKey)
-						: detail.messageKey,
-				})) || null;
-			message = code; // fallback: show code if i18n unavailable
+			details = exception.details
+				? await Promise.all(
+						exception.details.map(async (detail) => {
+							const translatedDetailMessage = this.i18n
+								? await this.i18n.translate(detail.messageKey, { lang })
+								: detail.messageKey;
+
+							return {
+								...detail,
+								message: translatedDetailMessage,
+							};
+						}),
+					)
+				: null;
+			message = code;
 			if (this.i18n) {
 				try {
 					message = await this.i18n.translate(`errors.${code}`, { lang });
