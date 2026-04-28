@@ -2,6 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { BaseEntity } from "./base.entity";
 import { ClassEntity } from "./class.entity";
 import { QuestionEntity } from "./question.entity";
+import { StudentResultEntity } from "./student-result.entity";
 import { TopicEntity } from "./topic.entity";
 
 @Entity({ name: "tests" })
@@ -48,4 +49,10 @@ export class TestEntity extends BaseEntity {
 		(question) => question.test,
 	)
 	questions?: QuestionEntity[];
+
+	@OneToMany(
+		() => StudentResultEntity,
+		(sr) => sr.exam,
+	)
+	studentResults?: StudentResultEntity[];
 }

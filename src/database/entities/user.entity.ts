@@ -4,6 +4,7 @@ import { UserRole } from "../../shared/types/user-role.enum";
 import { BaseEntity } from "./base.entity";
 import { ClassEntity } from "./class.entity";
 import { StudentClassEntity } from "./student-class.entity";
+import { StudentResultEntity } from "./student-result.entity";
 
 @Entity("users")
 @Index(["email"])
@@ -54,4 +55,10 @@ export class UserEntity extends BaseEntity {
 		(sc) => sc.student,
 	)
 	studentClasses?: StudentClassEntity[];
+
+	@OneToMany(
+		() => StudentResultEntity,
+		(sr) => sr.student,
+	)
+	studentResults?: StudentResultEntity[];
 }
