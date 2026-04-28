@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, Post } from "@nestjs/common";
+import { ApiBearerAuth } from "@nestjs/swagger";
 import { I18n, I18nContext } from "nestjs-i18n";
 import { Auth } from "../../shared/decorators/auth.decorator";
 import { User } from "../../shared/decorators/user.decorator";
@@ -75,6 +76,7 @@ export class AuthController {
 	@Post("sign-out")
 	@Auth(UserRole.TEACHER, UserRole.STUDENT)
 	@HttpCode(200)
+	@ApiBearerAuth()
 	async signOut(
 		@User() user: JwtPayload,
 		@Body() dto: SignOutDto,
