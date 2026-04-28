@@ -77,7 +77,7 @@ export class TestGenerationService {
 						const choice = choiceRepository.create({
 							question: savedQuestion,
 							answer: option,
-							isCorrect: option.charAt(0) === answer,
+							isCorrect: option === answer,
 						});
 						await choiceRepository.save(choice);
 					}

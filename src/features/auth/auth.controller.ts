@@ -1,9 +1,11 @@
 import { Body, Controller, HttpCode, Post } from "@nestjs/common";
+import { ApiBearerAuth } from "@nestjs/swagger";
 import { I18n, I18nContext } from "nestjs-i18n";
 import { Auth } from "../../shared/decorators/auth.decorator";
 import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
+import { UserRole } from "../../shared/types/user-role.enum";
 import { AuthService } from "./auth.service";
 import type { AuthTokensResDto } from "./dtos/auth-tokens-res.dto";
 import { SignInRequestDto } from "./dtos/sign-in-req.dto";
@@ -72,8 +74,9 @@ export class AuthController {
 	}
 
 	@Post("sign-out")
-	@Auth()
+	@Auth(UserRole.TEACHER, UserRole.STUDENT)
 	@HttpCode(200)
+	@ApiBearerAuth()
 	async signOut(
 		@User() user: JwtPayload,
 		@Body() dto: SignOutDto,

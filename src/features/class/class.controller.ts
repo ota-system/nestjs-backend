@@ -1,36 +1,25 @@
-import {
-	Body,
-	Controller,
-	Get,
-	Param,
-	Post,
-	Req,
-	UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
 import { ClassEntity } from "../../database/entities/class.entity";
 import { StudentClassEntity } from "../../database/entities/student-class.entity";
-import { Roles } from "../../shared/decorators/roles.decorator";
+import { Auth } from "../../shared/decorators/auth.decorator";
 import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { UserRole } from "../../shared/types/user-role.enum";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/role.guard";
 import { ClassService } from "./class.service";
 import { ClassResponseDto, UserSummaryDto } from "./dtos/class-res.dto";
 import { CreateClassRequestDto } from "./dtos/create-class-req.dto";
 
-@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 @Controller({ path: "classes", version: "1" })
 export class ClassController {
 	constructor(private readonly classService: ClassService) {}
 
 	@Post()
-	@Roles(UserRole.TEACHER)
+	@Auth(UserRole.TEACHER)
 	async create(
 		@I18n() i18n: I18nContext,
 		@User() user: JwtPayload,
@@ -48,7 +37,7 @@ export class ClassController {
 	// Get Class list base on role (Teacher: get class created by teacher, Student: get class joined by student)
 	// plainToInstance is used to transform ClassEntity to ClassResponseDto
 	@Get()
-	@Roles(UserRole.TEACHER, UserRole.STUDENT)
+	@Auth(UserRole.TEACHER, UserRole.STUDENT)
 	async getClassList(@I18n() i18n: I18nContext, @User() user: JwtPayload) {
 		const userId: string = user.sub;
 		const role: UserRole = user.role;
@@ -62,7 +51,7 @@ export class ClassController {
 	}
 
 	@Get(":id")
-	@Roles(UserRole.TEACHER, UserRole.STUDENT)
+	@Auth(UserRole.TEACHER, UserRole.STUDENT)
 	async getClassDetail(
 		@I18n() i18n: I18nContext,
 		@Param("id") id: string,
@@ -80,7 +69,7 @@ export class ClassController {
 	}
 
 	@Get(":id/students")
-	@Roles(UserRole.TEACHER, UserRole.STUDENT)
+	@Auth(UserRole.TEACHER, UserRole.STUDENT)
 	async getStudentsInClass(
 		@I18n() i18n: I18nContext,
 		@Param("id") id: string,
@@ -102,9 +91,7 @@ export class ClassController {
 	}
 
 	@Post(":id/join")
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
-	@Roles(UserRole.STUDENT)
+	@Auth(UserRole.STUDENT)
 	async joinClass(
 		@I18n() i18n: I18nContext,
 		@Param("id") classId: string,
@@ -121,8 +108,7 @@ export class ClassController {
 	}
 
 	@Get("code/:code")
-	@UseGuards(JwtAuthGuard)
-	@ApiBearerAuth()
+	@Auth(UserRole.TEACHER, UserRole.STUDENT)
 	async getClassByCode(@I18n() i18n: I18nContext, @Param("code") code: string) {
 		const classroom: ClassEntity = await this.classService.getClassByCode(code);
 		return BaseResponse.ok(
