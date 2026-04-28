@@ -22,5 +22,8 @@
 	"GOOGLE_AUTH_CODE_INVALID": "Google authorization code is invalid.",
 	"INVALID_TOKEN_SESSION": "Invalid token or session. Please sign in again.",
 	"ACCESS_TOKEN_REVOKED": "Access token has been revoked. Please sign in again.",
-	"AI_STREAM_ERROR": "Failed to stream data from AI service."
+	"AI_STREAM_ERROR": "Failed to stream data from AI service.",
+	"INVALID_QUESTION": "Invalid question provided.",
+	"INVALID_CHOICE": "Invalid choice provided.",
+	"NO_ANSWER_PROVIDED": "No answer provided."
 }

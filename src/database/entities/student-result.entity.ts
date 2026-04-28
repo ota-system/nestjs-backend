@@ -33,4 +33,11 @@ export class StudentResultEntity extends BaseEntity {
 
 	@Column({ type: "json", nullable: true })
 	mistakes?: JSON;
+
+	@Column({ name: "student_answers", type: "json", nullable: false })
+	studentAnswers!: Array<{
+		questionId: string;
+		optionId?: string;
+		answer?: string;
+	}>;
 }

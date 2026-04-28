@@ -22,5 +22,8 @@
 	"GOOGLE_AUTH_CODE_INVALID": "Mã xác thực Google không hợp lệ.",
 	"INVALID_TOKEN_SESSION": "Token hoặc phiên không hợp lệ. Vui lòng đăng nhập lại.",
 	"ACCESS_TOKEN_REVOKED": "Token truy cập đã bị thu hồi. Vui lòng đăng nhập lại.",
-	"AI_STREAM_ERROR": "Lỗi khi stream dữ liệu từ AI."
+	"AI_STREAM_ERROR": "Lỗi khi stream dữ liệu từ AI.",
+	"INVALID_QUESTION": "Câu hỏi không hợp lệ.",
+	"INVALID_CHOICE": "Lựa chọn không hợp lệ.",
+	"NO_ANSWER_PROVIDED": "Không có câu trả lời được cung cấp."
 }
