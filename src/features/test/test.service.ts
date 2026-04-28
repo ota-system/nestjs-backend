@@ -52,13 +52,9 @@ export class TestService {
 				const choice = await this.choiceRepository.findOne({
 					where: { id: answer.optionId },
 				});
-				if (choice) {
-					correct++;
-				} else {
+				if (!choice) {
 					throw new BaseException(400, "INVALID_CHOICE");
-				}
-
-				if (choice.isCorrect) {
+				} else if (choice.isCorrect) {
 					correct++;
 				}
 			} else if (typeof answer.answer === "string") {
@@ -70,8 +66,6 @@ export class TestService {
 				if (expected === actual) {
 					correct++;
 				}
-			} else {
-				throw new BaseException(400, "NO_ANSWER_PROVIDED");
 			}
 		}
 
