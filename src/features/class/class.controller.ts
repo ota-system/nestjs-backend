@@ -13,7 +13,9 @@ import { I18n, I18nContext } from "nestjs-i18n";
 import { ClassEntity } from "../../database/entities/class.entity";
 import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { Roles } from "../../shared/decorators/roles.decorator";
+import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
+import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/role.guard";
@@ -21,42 +23,35 @@ import { ClassService } from "./class.service";
 import { ClassResponseDto, UserSummaryDto } from "./dtos/class-res.dto";
 import { CreateClassRequestDto } from "./dtos/create-class-req.dto";
 
+@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiBearerAuth()
 @Controller({ path: "classes", version: "1" })
 export class ClassController {
 	constructor(private readonly classService: ClassService) {}
 
 	@Post()
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER)
 	async create(
 		@I18n() i18n: I18nContext,
-		@Req() req: any,
+		@User() user: JwtPayload,
 		@Body() body: CreateClassRequestDto,
 	) {
-		const userId: string = req.user.sub;
+		const userId: string = user.sub;
 		const classroom = await this.classService.createClass({
 			name: body.name,
 			subject: body.subject,
 			teacherId: userId,
 		});
-		return BaseResponse.ok(
-			classroom,
-			i18n.t("class.CREATED_SUCCESS", {
-				defaultValue: "Class created successfully",
-			}),
-		);
+		return BaseResponse.ok(classroom, i18n.t("class.CREATED_SUCCESS"));
 	}
 
 	// Get Class list base on role (Teacher: get class created by teacher, Student: get class joined by student)
 	// plainToInstance is used to transform ClassEntity to ClassResponseDto
 	@Get()
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER, UserRole.STUDENT)
-	async getClassList(@I18n() i18n: I18nContext, @Req() req: any) {
-		const userId: string = req.user.sub;
-		const role: UserRole = req.user.role;
+	async getClassList(@I18n() i18n: I18nContext, @User() user: JwtPayload) {
+		const userId: string = user.sub;
+		const role: UserRole = user.role;
 		const classes = await this.classService.getClassList(userId, role);
 		return BaseResponse.ok(
 			plainToInstance(ClassResponseDto, classes, {
@@ -67,16 +62,14 @@ export class ClassController {
 	}
 
 	@Get(":id")
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER, UserRole.STUDENT)
 	async getClassDetail(
 		@I18n() i18n: I18nContext,
 		@Param("id") id: string,
-		@Req() req: any,
+		@User() user: JwtPayload,
 	) {
-		const userId: string = req.user.sub;
-		const role: UserRole = req.user.role;
+		const userId: string = user.sub;
+		const role: UserRole = user.role;
 		const classroom = await this.classService.getClassDetail(id, userId, role);
 		return BaseResponse.ok(
 			plainToInstance(ClassResponseDto, classroom, {
@@ -87,16 +80,14 @@ export class ClassController {
 	}
 
 	@Get(":id/students")
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
 	@Roles(UserRole.TEACHER, UserRole.STUDENT)
 	async getStudentsInClass(
 		@I18n() i18n: I18nContext,
 		@Param("id") id: string,
-		@Req() req: any,
+		@User() user: JwtPayload,
 	) {
-		const userId: string = req.user.sub;
-		const role: UserRole = req.user.role;
+		const userId: string = user.sub;
+		const role: UserRole = user.role;
 		const students = await this.classService.getStudentsInClass(
 			id,
 			userId,

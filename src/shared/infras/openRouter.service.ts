@@ -1,12 +1,9 @@
-import {
-	Injectable,
-	InternalServerErrorException,
-	MessageEvent,
-} from "@nestjs/common";
+import { Injectable, Logger, MessageEvent } from "@nestjs/common";
 import { OpenRouter } from "@openrouter/sdk";
 import { plainToInstance } from "class-transformer";
 import { Observable } from "rxjs";
-import { TeacherPromptResponseDto } from "../../features/test-generation/dtos/teacher-prompt.res.dto";
+import { TeacherPromptResponseDto } from "../dtos/teacher-prompt.res.dto";
+import { BaseException } from "../exception/base.exception";
 import QuestionObject from "../interface/QuestionObject";
 import prompts from "./prompts.json";
 
@@ -98,11 +95,9 @@ export class OpenRouterService {
 					subscriber.next({ data: "[DONE]" } as MessageEvent);
 					subscriber.complete();
 				} catch (error) {
-					console.error("Stream Error:", error);
+					Logger.error("Stream Error", error);
 					if (!isCancelled && !subscriber.closed) {
-						subscriber.error(
-							new InternalServerErrorException("Lỗi khi stream dữ liệu từ AI"),
-						);
+						subscriber.error(new BaseException(500, "AI_STREAM_ERROR"));
 					}
 				}
 			})();

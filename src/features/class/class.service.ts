@@ -1,13 +1,10 @@
-import {
-	ForbiddenException,
-	Injectable,
-	NotFoundException,
-} from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ClassEntity } from "../../database/entities/class.entity";
 import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { UserEntity } from "../../database/entities/user.entity";
+import { BaseException } from "../../shared/exception/base.exception";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { CreateClassDto } from "./dtos/create-class.dto";
 import { AlreadyJoinedException } from "./exceptions/already-joined.exception";
@@ -75,7 +72,7 @@ export class ClassService {
 			relations: ["teacher", "students", "students.student"],
 		});
 		if (!classroom) {
-			throw new NotFoundException("Không tìm thấy lớp học");
+			throw new BaseException(404, "CLASS_NOT_FOUND");
 		}
 
 		const isTeacher =
@@ -85,7 +82,7 @@ export class ClassService {
 			classroom.students?.some((sc) => sc.student.id === userId);
 
 		if (!isTeacher && !isStudent) {
-			throw new ForbiddenException("Bạn không có quyền truy cập lớp học này");
+			throw new BaseException(403, "CLASS_ACCESS_DENIED");
 		}
 
 		return classroom;
@@ -105,11 +102,11 @@ export class ClassService {
 		});
 
 		if (!classroom) {
-			throw new NotFoundException("Không tìm thấy lớp học hoặc mã không đúng");
+			throw new BaseException(404, "CLASS_NOT_FOUND_OR_INVALID_CODE");
 		}
 
 		if (!(await this.isUserExist(studentId))) {
-			throw new NotFoundException("Tài khoản không tồn tại");
+			throw new BaseException(404, "USER_NOT_FOUND");
 		}
 
 		if (await this.isStudentJoinedClass(studentId, classroom.id)) {
@@ -132,7 +129,7 @@ export class ClassService {
 		});
 
 		if (!classroom) {
-			throw new NotFoundException("Không tìm thấy lớp học hoặc mã không đúng");
+			throw new BaseException(404, "CLASS_NOT_FOUND_OR_INVALID_CODE");
 		}
 
 		return classroom;

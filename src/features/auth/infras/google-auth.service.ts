@@ -1,7 +1,8 @@
-import { Injectable, Logger, UnauthorizedException } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { OAuth2Client } from "google-auth-library";
 import { ENV_KEY } from "../../../shared/constants/env.constant";
+import { BaseException } from "../../../shared/exception/base.exception";
 
 @Injectable()
 export class GoogleAuthService {
@@ -22,7 +23,7 @@ export class GoogleAuthService {
 			});
 
 			if (!tokens.id_token) {
-				throw new UnauthorizedException("Không nhận được ID token từ Google");
+				throw new BaseException(401, "GOOGLE_ID_TOKEN_MISSING");
 			}
 
 			const ticket = await this.client.verifyIdToken({
@@ -33,11 +34,11 @@ export class GoogleAuthService {
 			const payload = ticket.getPayload();
 
 			if (!payload || !payload.sub || !payload.email) {
-				throw new UnauthorizedException("Dữ liệu token không hợp lệ");
+				throw new BaseException(401, "GOOGLE_TOKEN_INVALID_DATA");
 			}
 
 			if (!payload.email_verified) {
-				throw new UnauthorizedException("Email chưa được xác minh");
+				throw new BaseException(401, "GOOGLE_EMAIL_NOT_VERIFIED");
 			}
 
 			return {
@@ -48,7 +49,7 @@ export class GoogleAuthService {
 			};
 		} catch (error) {
 			Logger.error("Lỗi xác thực Google:", error);
-			throw new UnauthorizedException("Mã xác thực Google không hợp lệ");
+			throw new BaseException(401, "GOOGLE_AUTH_CODE_INVALID");
 		}
 	}
 }

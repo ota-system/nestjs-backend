@@ -1,25 +1,14 @@
 import { Exclude } from "class-transformer";
-import {
-	Column,
-	CreateDateColumn,
-	DeleteDateColumn,
-	Entity,
-	Index,
-	OneToMany,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn,
-} from "typeorm";
+import { Column, Entity, Index, OneToMany } from "typeorm";
 import { UserRole } from "../../shared/types/user-role.enum";
+import { BaseEntity } from "./base.entity";
 import { ClassEntity } from "./class.entity";
 import { StudentClassEntity } from "./student-class.entity";
 
 @Entity("users")
 @Index(["email"])
 @Index(["googleId"])
-export class UserEntity {
-	@PrimaryGeneratedColumn("uuid")
-	id!: string;
-
+export class UserEntity extends BaseEntity {
 	@Column({ name: "full_name", type: "varchar", length: 100, nullable: false })
 	fullName!: string;
 
@@ -53,15 +42,6 @@ export class UserEntity {
 
 	@Column({ name: "is_active", default: true })
 	isActive!: boolean;
-
-	@CreateDateColumn({ name: "created_at" })
-	createdAt!: Date;
-
-	@UpdateDateColumn({ name: "updated_at" })
-	updatedAt!: Date;
-
-	@DeleteDateColumn({ name: "deleted_at", nullable: true })
-	deletedAt?: Date;
 
 	@OneToMany(
 		() => ClassEntity,

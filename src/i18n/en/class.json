@@ -3,5 +3,5 @@
 	"GET_CLASS_LIST_SUCCESS": "Get class list successful",
 	"GET_CLASS_DETAIL_SUCCESS": "Get class detail successful",
 	"GET_STUDENTS_SUCCESS": "Get students in class successful",
-	"JOIN_CLASS_SUCCESS": "Join class successful"
+	"JOINED_CLASS_SUCCESS": "Join class successful"
 }

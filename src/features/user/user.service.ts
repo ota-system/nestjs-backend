@@ -1,15 +1,12 @@
-import {
-	BadRequestException,
-	Injectable,
-	NotFoundException,
-} from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { plainToInstance } from "class-transformer";
 import { Repository } from "typeorm";
 import { UserEntity } from "../../database/entities/user.entity";
+import { BaseException } from "../../shared/exception/base.exception";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { AuthService } from "../auth/auth.service";
-import { AuthTokensResDto } from "../auth/dto/auth-tokens-res.dto";
+import { AuthTokensResDto } from "../auth/dtos/auth-tokens-res.dto";
 import { UserResponseDto } from "./dtos/user-res.dto";
 
 @Injectable()
@@ -23,9 +20,7 @@ export class UserService {
 	async findUserById(id: string): Promise<UserResponseDto> {
 		const user = await this.userRepository.findOneBy({ id });
 		if (!user) {
-			throw new NotFoundException(
-				"Người dùng không còn tồn tại hoặc không hợp lệ",
-			);
+			throw new BaseException(404, "USER_NOT_FOUND");
 		}
 		return plainToInstance(UserResponseDto, user, {
 			excludeExtraneousValues: true,
@@ -39,11 +34,11 @@ export class UserService {
 		const user = await this.userRepository.findOneBy({ id: currentUserId });
 
 		if (!user) {
-			throw new NotFoundException("Người dùng không tồn tại");
+			throw new BaseException(404, "USER_NOT_FOUND");
 		}
 
 		if (!this.canUserUpdateRole(user)) {
-			throw new BadRequestException("Bạn đã chọn vai trò rồi!");
+			throw new BaseException(400, "ROLE_ALREADY_SET");
 		}
 
 		user.role = newRole;
