@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { ChoiceEntity } from "../../database/entities/choice.entity";
 import { ClassEntity } from "../../database/entities/class.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
 import { TestEntity } from "../../database/entities/test.entity";
@@ -63,12 +64,22 @@ export class TestGenerationService {
 					test: savedTest,
 					question,
 					level: difficulty,
-					options,
 					type: questionType,
-					answer,
+					answer: questionType === "fill_in_the_blank" ? answer : null,
 					explanation,
 				});
-				await questionRepository.save(questionEntity);
+				const savedQuestion = await questionRepository.save(questionEntity);
+				if (questionType === "multiple_choice") {
+					const choiceRepository = manager.getRepository(ChoiceEntity);
+					for (const option of options) {
+						const choice = choiceRepository.create({
+							question: savedQuestion,
+							answer: option,
+							isCorrect: option.charAt(0) === answer,
+						});
+						await choiceRepository.save(choice);
+					}
+				}
 			}
 		});
 

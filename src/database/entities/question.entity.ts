@@ -1,5 +1,6 @@
-import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { BaseEntity } from "./base.entity";
+import { ChoiceEntity } from "./choice.entity";
 import { TestEntity } from "./test.entity";
 
 @Entity({ name: "questions" })
@@ -24,12 +25,16 @@ export class QuestionEntity extends BaseEntity {
 	@Column()
 	question!: string;
 
-	@Column("simple-array", { nullable: true })
-	options?: string[];
-
 	@Column()
-	answer!: string;
+	@Column({ type: "text", nullable: true })
+	answer?: string | null;
 
 	@Column({ nullable: true })
 	explanation?: string;
+
+	@OneToMany(
+		() => ChoiceEntity,
+		(choice) => choice.question,
+	)
+	choices?: ChoiceEntity[];
 }
