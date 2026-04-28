@@ -1,0 +1,24 @@
+import { Module } from "@nestjs/common";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { ChoiceEntity } from "../../database/entities/choice.entity";
+import { QuestionEntity } from "../../database/entities/question.entity";
+import { StudentResultEntity } from "../../database/entities/student-result.entity";
+import { TestEntity } from "../../database/entities/test.entity";
+import { SharedModule } from "../../shared/shared.module";
+import { TestController } from "./test.controller";
+import { TestService } from "./test.service";
+
+@Module({
+	imports: [
+		TypeOrmModule.forFeature([
+			TestEntity,
+			QuestionEntity,
+			ChoiceEntity,
+			StudentResultEntity,
+		]),
+		SharedModule,
+	],
+	providers: [TestService],
+	controllers: [TestController],
+})
+export class TestModule {}

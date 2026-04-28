@@ -1,4 +1,5 @@
 {
 	"SAVE_TEST_SUCCESS": "Test saved successfully",
-	"SAVE_TEST_PERMISSION_DENIED": "You do not have permission to save the test for this class"
+	"SAVE_TEST_PERMISSION_DENIED": "You do not have permission to save the test for this class",
+	"SUBMIT_TEST_SUCCESS": "Test submitted successfully"
 }
