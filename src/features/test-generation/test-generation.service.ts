@@ -6,6 +6,7 @@ import { ClassEntity } from "../../database/entities/class.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
 import { TestEntity } from "../../database/entities/test.entity";
 import { TopicEntity } from "../../database/entities/topic.entity";
+import { QuestionType } from "../../shared/types/question-type.enum";
 import { SavedTestRequestDto } from "./dtos/saved-test.req.dto";
 
 @Injectable()
@@ -65,11 +66,12 @@ export class TestGenerationService {
 					question,
 					level: difficulty,
 					type: questionType,
-					answer: questionType === "fill_in_the_blank" ? answer : null,
+					answer:
+						questionType === QuestionType.FILL_IN_THE_BLANK ? answer : null,
 					explanation,
 				});
 				const savedQuestion = await questionRepository.save(questionEntity);
-				if (questionType === "multiple_choice") {
+				if (questionType === QuestionType.MULTIPLE_CHOICE) {
 					const choiceRepository = manager.getRepository(ChoiceEntity);
 					for (const option of options) {
 						const choice = choiceRepository.create({

@@ -8,7 +8,7 @@ import { I18nModule } from "nestjs-i18n";
 import { AuthModule } from "./features/auth/auth.module";
 import { ClassModule } from "./features/class/class.module";
 import { HealthModule } from "./features/health/health.module";
-import { TestExamModule } from "./features/test-exam/test-exam.module";
+import { TestModule } from "./features/test/test.module";
 import { TestGenerationModule } from "./features/test-generation/test-generation.module";
 import { UserModule } from "./features/user/user.module";
 import { getBullConfig } from "./shared/configs/bull.config";
@@ -65,7 +65,7 @@ import { SharedModule } from "./shared/shared.module";
 		AuthModule,
 		ClassModule,
 		TestGenerationModule,
-		TestExamModule,
+		TestModule,
 	],
 })
 export class AppModule {}

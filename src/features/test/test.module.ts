@@ -5,8 +5,8 @@ import { QuestionEntity } from "../../database/entities/question.entity";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { TestEntity } from "../../database/entities/test.entity";
 import { SharedModule } from "../../shared/shared.module";
-import { TestExamController } from "./test-exam.controller";
-import { TestExamService } from "./test-exam.service";
+import { TestController } from "./test.controller";
+import { TestService } from "./test.service";
 
 @Module({
 	imports: [
@@ -18,7 +18,7 @@ import { TestExamService } from "./test-exam.service";
 		]),
 		SharedModule,
 	],
-	providers: [TestExamService],
-	controllers: [TestExamController],
+	providers: [TestService],
+	controllers: [TestController],
 })
-export class TestExamModule {}
+export class TestModule {}

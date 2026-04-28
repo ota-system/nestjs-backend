@@ -11,7 +11,7 @@ import calculateCorrectRate from "./utils/calculate-correct-rate.util";
 import calculateScore from "./utils/calculate-score.util";
 
 @Injectable()
-export class TestExamService {
+export class TestService {
 	constructor(
 		@InjectRepository(TestEntity)
 		private readonly testRepository: Repository<TestEntity>,
@@ -45,7 +45,7 @@ export class TestExamService {
 				where: { id: answer.questionId },
 			});
 			if (!question) {
-				throw new BaseException(401, "INVALID_QUESTION");
+				throw new BaseException(400, "INVALID_QUESTION");
 			}
 
 			if (answer.optionId) {
@@ -55,7 +55,7 @@ export class TestExamService {
 				if (choice) {
 					correct++;
 				} else {
-					throw new BaseException(401, "INVALID_CHOICE");
+					throw new BaseException(400, "INVALID_CHOICE");
 				}
 
 				if (choice.isCorrect) {
@@ -71,7 +71,7 @@ export class TestExamService {
 					correct++;
 				}
 			} else {
-				throw new BaseException(401, "NO_ANSWER_PROVIDED");
+				throw new BaseException(400, "NO_ANSWER_PROVIDED");
 			}
 		}
 
@@ -87,6 +87,12 @@ export class TestExamService {
 		const correctRate = calculateCorrectRate(correct, totalQuestions);
 
 		await this.studentResultRepository.save(studentResult);
-		return { score, correctRate: correctRate };
+		return {
+			score,
+			correctRate: correctRate,
+			subject: test?.topic.topicName ?? "Unknown",
+			correctQuestions: correct,
+			totalQuestions,
+		};
 	}
 }

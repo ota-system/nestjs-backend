@@ -8,10 +8,8 @@ import {
 	IsNumber,
 	IsString,
 } from "class-validator";
-import {
-	Difficulty,
-	QuestionType,
-} from "../../../shared/interface/QuestionObject";
+import { Difficulty } from "../../../shared/interface/QuestionObject";
+import { QuestionType } from "../../../shared/types/question-type.enum";
 
 class QuestionDto {
 	@IsString()

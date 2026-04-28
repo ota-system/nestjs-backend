@@ -4,19 +4,20 @@ import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
-import { TestExamService } from "./test-exam.service";
+import { SubmitTestResponseDto } from "./dtos/submit-test.res.dto";
+import { TestService } from "./test.service";
 
 @Controller("tests")
-export class TestExamController {
-	constructor(private readonly examService: TestExamService) {}
+export class TestController {
+	constructor(private readonly testService: TestService) {}
 
 	@Post("/submit")
 	async submit(
 		@Body() dto: SubmitTestRequestDto,
 		@User() user: JwtPayload,
 		@I18n() i18n: I18nContext,
-	) {
-		const result = await this.examService.submitTest({
+	): Promise<BaseResponse<SubmitTestResponseDto>> {
+		const result = await this.testService.submitTest({
 			dto,
 			studentId: user.sub,
 		});
