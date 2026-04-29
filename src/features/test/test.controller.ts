@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Post } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { I18n, I18nContext } from "nestjs-i18n";
 import { Auth } from "../../shared/decorators/auth.decorator";
@@ -27,35 +27,5 @@ export class TestController {
 			studentId: user.sub,
 		});
 		return BaseResponse.ok(result, await i18n.t("test.SUBMIT_TEST_SUCCESS"));
-	}
-
-	@Get("/class/:classId")
-	@Auth(UserRole.STUDENT)
-	@ApiBearerAuth()
-	async getExamsByClass(
-		@Param("classId") classId: string,
-		@User() user: JwtPayload,
-		@I18n() i18n: I18nContext,
-	) {
-		const exams = await this.testService.getExamsByClass({
-			classId,
-			studentId: user.sub,
-		});
-		return BaseResponse.ok(exams, await i18n.t("test.GET_EXAM_LIST_SUCCESS"));
-	}
-
-	@Get("/:examId")
-	@Auth(UserRole.STUDENT)
-	@ApiBearerAuth()
-	async getExamDetail(
-		@Param("examId") examId: string,
-		@User() user: JwtPayload,
-		@I18n() i18n: I18nContext,
-	) {
-		const exam = await this.testService.getExamDetail({
-			examId,
-			studentId: user.sub,
-		});
-		return BaseResponse.ok(exam, await i18n.t("test.GET_EXAM_DETAIL_SUCCESS"));
 	}
 }

@@ -1,6 +1,6 @@
 import { Expose, Type } from "class-transformer";
 
-export class ExamSummaryDto {
+export class TestSummaryDto {
 	@Expose()
 	id!: string;
 
@@ -26,10 +26,10 @@ export class ExamSummaryDto {
 	createdAt!: Date;
 }
 
-export class ExamListResponseDto {
+export class TestListResponseDto {
 	@Expose()
-	@Type(() => ExamSummaryDto)
-	exams!: ExamSummaryDto[];
+	@Type(() => TestSummaryDto)
+	tests!: TestSummaryDto[];
 
 	@Expose()
 	total!: number;
