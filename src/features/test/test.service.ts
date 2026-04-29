@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ChoiceEntity } from "../../database/entities/choice.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
+import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { TestEntity } from "../../database/entities/test.entity";
 import { BaseException } from "../../shared/exception/base.exception";
@@ -25,6 +26,9 @@ export class TestService {
 
 		@InjectRepository(StudentResultEntity)
 		private readonly studentResultRepository: Repository<StudentResultEntity>,
+
+		@InjectRepository(StudentClassEntity)
+		private readonly studentClassRepository: Repository<StudentClassEntity>,
 	) {}
 
 	async submitTest({
@@ -90,6 +94,81 @@ export class TestService {
 			subject: test?.topic.topicName ?? "Unknown",
 			correctQuestions: correct,
 			totalQuestions,
+		};
+	}
+
+	async getExamsByClass({
+		classId,
+		studentId,
+	}: {
+		classId: string;
+		studentId: string;
+	}) {
+		const enrollment = await this.studentClassRepository.findOne({
+			where: {
+				student: { id: studentId },
+				class: { id: classId },
+			},
+		});
+
+		if (!enrollment) {
+			throw new BaseException(403, "CLASS_ACCESS_DENIED");
+		}
+
+		const exams = await this.testRepository.find({
+			where: { class: { id: classId } },
+			relations: ["topic"],
+			order: { createdAt: "DESC" },
+		});
+
+		return exams.map((exam) => ({
+			id: exam.id,
+			testName: exam.testName,
+			startedTime: exam.startedTime,
+			duration: exam.duration,
+			totalQuestions: exam.totalQuestions,
+			antiCheating: exam.antiCheating,
+			topic: exam.topic.topicName,
+			createdAt: exam.createdAt,
+		}));
+	}
+
+	async getExamDetail({
+		examId,
+		studentId,
+	}: {
+		examId: string;
+		studentId: string;
+	}) {
+		const exam = await this.testRepository.findOne({
+			where: { id: examId },
+			relations: ["topic", "class"],
+		});
+
+		if (!exam) {
+			throw new BaseException(404, "EXAM_NOT_FOUND");
+		}
+
+		const enrollment = await this.studentClassRepository.findOne({
+			where: {
+				student: { id: studentId },
+				class: { id: exam.class.id },
+			},
+		});
+
+		if (!enrollment) {
+			throw new BaseException(403, "CLASS_ACCESS_DENIED");
+		}
+
+		return {
+			id: exam.id,
+			testName: exam.testName,
+			startedTime: exam.startedTime,
+			duration: exam.duration,
+			totalQuestions: exam.totalQuestions,
+			antiCheating: exam.antiCheating,
+			topic: exam.topic.topicName,
+			createdAt: exam.createdAt,
 		};
 	}
 }
