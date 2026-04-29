@@ -108,12 +108,7 @@ export class TestService {
 	async getExam(testId: string, userId: string, role: UserRole) {
 		const test = await this.testRepository.findOne({
 			where: { id: testId },
-			relations: {
-				questions: {
-					choices: true,
-				},
-				class: true,
-			},
+			relations: { class: true },
 		});
 
 		if (!test) {
@@ -138,20 +133,12 @@ export class TestService {
 			throw new BaseException(403, "TEST_ACCESS_DENIED");
 		}
 
-		const questions = (test.questions ?? []).map((q) => ({
-			id: q.id,
-			question: q.question,
-			type: q.type,
-			level: q.level,
-			choices: q.choices,
-		}));
-
 		return {
 			id: test.id,
 			name: test.testName,
 			duration: test.duration,
 			start_time: test.startedTime,
-			questions,
+			totalQuestions: test.totalQuestions,
 		};
 	}
 

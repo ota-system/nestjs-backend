@@ -2,5 +2,6 @@
 	"SAVE_TEST_SUCCESS": "Lưu đề thi thành công",
 	"SAVE_TEST_PERMISSION_DENIED": "Bạn không có quyền lưu đề thi cho lớp này",
 	"SUBMIT_TEST_SUCCESS": "Nộp bài thi thành công",
-	"GET_EXAM_SUCCESS": "Lấy chi tiết bài thi thành công"
+	"GET_EXAM_SUCCESS": "Lấy chi tiết bài thi thành công",
+	"GET_QUESTIONS_SUCCESS": "Lấy câu hỏi bài thi thành công"
 }
