@@ -5,11 +5,11 @@ export class ExamResponseDto {
 	id!: string;
 
 	@Expose()
-	name!: string;
+	testName!: string;
 
 	@Expose()
 	duration!: number;
 
 	@Expose()
-	start_time!: Date;
+	startedTime!: Date;
 }

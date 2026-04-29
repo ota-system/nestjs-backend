@@ -72,10 +72,13 @@ export class TestController {
 		@Query() query: GetQuestionsQueryDto,
 		@User() user: JwtPayload,
 	) {
-		const { data, total } = await this.questionService.getQuestionsForTest(
+		const test = await this.testService.validateTestAccess(
 			testId,
 			user.sub,
 			user.role,
+		);
+		const { data, total } = await this.questionService.getQuestionsForTest(
+			test,
 			query.page,
 			query.limit,
 		);

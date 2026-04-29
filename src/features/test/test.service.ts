@@ -39,6 +39,47 @@ export class TestService {
 		private readonly studentClassRepository: Repository<StudentClassEntity>,
 	) {}
 
+	async validateTestAccess(
+		testId: string,
+		userId: string,
+		role: UserRole,
+	): Promise<TestEntity> {
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: { class: true },
+		});
+
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+
+		const now = new Date();
+
+		if (now < test.startedTime) {
+			throw new BaseException(403, "TEST_NOT_STARTED");
+		}
+
+		const endTime = new Date(
+			test.startedTime.getTime() + test.duration * 60 * 1000,
+		);
+		if (now > endTime) {
+			throw new BaseException(403, "TEST_ENDED");
+		}
+
+		const hasAccess = await this.checkAccess(test.class.id, userId, role);
+		if (!hasAccess) {
+			throw new BaseException(403, "TEST_ACCESS_DENIED");
+		}
+
+		return test;
+	}
+
+	async getExam(testId: string, userId: string, role: UserRole) {
+		const test = await this.validateTestAccess(testId, userId, role);
+
+		return test;
+	}
+
 	async submitTest({
 		dto,
 		studentId,
@@ -102,43 +143,6 @@ export class TestService {
 			subject: test?.topic.topicName ?? "Unknown",
 			correctQuestions: correct,
 			totalQuestions,
-		};
-	}
-
-	async getExam(testId: string, userId: string, role: UserRole) {
-		const test = await this.testRepository.findOne({
-			where: { id: testId },
-			relations: { class: true },
-		});
-
-		if (!test) {
-			throw new BaseException(404, "TEST_NOT_FOUND");
-		}
-
-		const now = new Date();
-
-		if (now < test.startedTime) {
-			throw new BaseException(403, "TEST_NOT_STARTED");
-		}
-
-		const endTime = new Date(
-			test.startedTime.getTime() + test.duration * 60 * 1000,
-		);
-		if (now > endTime) {
-			throw new BaseException(403, "TEST_ENDED");
-		}
-
-		const hasAccess = await this.checkAccess(test.class.id, userId, role);
-		if (!hasAccess) {
-			throw new BaseException(403, "TEST_ACCESS_DENIED");
-		}
-
-		return {
-			id: test.id,
-			name: test.testName,
-			duration: test.duration,
-			start_time: test.startedTime,
-			totalQuestions: test.totalQuestions,
 		};
 	}
 

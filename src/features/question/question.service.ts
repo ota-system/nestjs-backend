@@ -1,65 +1,38 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { ClassEntity } from "../../database/entities/class.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
-import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { TestEntity } from "../../database/entities/test.entity";
-import { BaseException } from "../../shared/exception/base.exception";
-import { UserRole } from "../../shared/types/user-role.enum";
+import { RedisService } from "../../shared/redis/redis.service";
+
+type QuestionsCache = {
+	data: {
+		id: string;
+		question: string;
+		type: string;
+		level: string;
+		choices: { id: string; answer: string }[];
+	}[];
+	total: number;
+};
 
 @Injectable()
 export class QuestionService {
 	constructor(
-		@InjectRepository(TestEntity)
-		private readonly testRepository: Repository<TestEntity>,
-
 		@InjectRepository(QuestionEntity)
 		private readonly questionRepository: Repository<QuestionEntity>,
 
-		@InjectRepository(ClassEntity)
-		private readonly classRepository: Repository<ClassEntity>,
-
-		@InjectRepository(StudentClassEntity)
-		private readonly studentClassRepository: Repository<StudentClassEntity>,
+		private readonly redisService: RedisService,
 	) {}
 
-	async getQuestionsForTest(
-		testId: string,
-		userId: string,
-		role: UserRole,
-		page: number,
-		limit: number,
-	) {
-		const test = await this.testRepository.findOne({
-			where: { id: testId },
-			relations: { class: true },
-		});
+	async getQuestionsForTest(test: TestEntity, page: number, limit: number) {
+		const cacheKey = `exam_questions:${test.id}:p${page}:l${limit}`;
 
-		if (!test) {
-			throw new BaseException(404, "TEST_NOT_FOUND");
-		}
-
-		const now = new Date();
-
-		if (now < test.startedTime) {
-			throw new BaseException(403, "TEST_NOT_STARTED");
-		}
-
-		const endTime = new Date(
-			test.startedTime.getTime() + test.duration * 60 * 1000,
-		);
-		if (now > endTime) {
-			throw new BaseException(403, "TEST_ENDED");
-		}
-
-		const hasAccess = await this.checkAccess(test.class.id, userId, role);
-		if (!hasAccess) {
-			throw new BaseException(403, "TEST_ACCESS_DENIED");
-		}
+		const cached = await this.redisService.getCache<QuestionsCache>(cacheKey);
+		if (cached) return cached;
 
 		const [questions, total] = await this.questionRepository.findAndCount({
-			where: { test: { id: testId } },
+			where: { test: { id: test.id } },
 			relations: { choices: true },
 			skip: (page - 1) * limit,
 			take: limit,
@@ -77,26 +50,17 @@ export class QuestionService {
 			})),
 		}));
 
-		return { data, total };
-	}
+		const result: QuestionsCache = { data, total };
 
-	private async checkAccess(
-		classId: string,
-		userId: string,
-		role: UserRole,
-	): Promise<boolean> {
-		if (role === UserRole.TEACHER) {
-			return this.classRepository.exists({
-				where: { id: classId, teacher: { id: userId } },
-			});
+		const endTime = new Date(
+			test.startedTime.getTime() + test.duration * 60 * 1000,
+		);
+		const ttl = Math.floor((endTime.getTime() - Date.now()) / 1000);
+
+		if (ttl > 0) {
+			await this.redisService.setCache(cacheKey, result, ttl);
 		}
 
-		if (role === UserRole.STUDENT) {
-			return this.studentClassRepository.exists({
-				where: { class: { id: classId }, student: { id: userId } },
-			});
-		}
-
-		return false;
+		return result;
 	}
 }

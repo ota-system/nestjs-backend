@@ -28,5 +28,6 @@ import { TestService } from "./test.service";
 	],
 	controllers: [TestController],
 	providers: [TestService],
+	exports: [TestService],
 })
 export class TestModule {}
