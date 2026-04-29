@@ -24,7 +24,13 @@ export class QuestionService {
 		private readonly studentClassRepository: Repository<StudentClassEntity>,
 	) {}
 
-	async getQuestionsForTest(testId: string, userId: string, role: UserRole) {
+	async getQuestionsForTest(
+		testId: string,
+		userId: string,
+		role: UserRole,
+		page: number,
+		limit: number,
+	) {
 		const test = await this.testRepository.findOne({
 			where: { id: testId },
 			relations: { class: true },
@@ -52,12 +58,15 @@ export class QuestionService {
 			throw new BaseException(403, "TEST_ACCESS_DENIED");
 		}
 
-		const questions = await this.questionRepository.find({
+		const [questions, total] = await this.questionRepository.findAndCount({
 			where: { test: { id: testId } },
 			relations: { choices: true },
+			skip: (page - 1) * limit,
+			take: limit,
+			order: { createdAt: "ASC" },
 		});
 
-		return questions.map((q) => ({
+		const data = questions.map((q) => ({
 			id: q.id,
 			question: q.question,
 			type: q.type,
@@ -67,6 +76,8 @@ export class QuestionService {
 				answer: c.answer,
 			})),
 		}));
+
+		return { data, total };
 	}
 
 	private async checkAccess(

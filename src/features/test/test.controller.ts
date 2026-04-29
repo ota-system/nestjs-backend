@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import {
+	Body,
+	Controller,
+	Get,
+	Param,
+	Post,
+	Query,
+	UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
@@ -9,6 +17,7 @@ import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { GetQuestionsQueryDto } from "../question/dtos/get-questions-query.dto";
 import { ExamQuestionDto } from "../question/dtos/question-res.dto";
 import { QuestionService } from "../question/question.service";
 import { ExamResponseDto } from "./dtos/exam-res.dto";
@@ -60,18 +69,25 @@ export class TestController {
 	async getQuestionsForTest(
 		@I18n() i18n: I18nContext,
 		@Param("testId") testId: string,
+		@Query() query: GetQuestionsQueryDto,
 		@User() user: JwtPayload,
 	) {
-		const questions = await this.questionService.getQuestionsForTest(
+		const { data, total } = await this.questionService.getQuestionsForTest(
 			testId,
 			user.sub,
 			user.role,
+			query.page,
+			query.limit,
 		);
 		return BaseResponse.ok(
-			plainToInstance(ExamQuestionDto, questions, {
-				excludeExtraneousValues: true,
-			}),
+			plainToInstance(ExamQuestionDto, data, { excludeExtraneousValues: true }),
 			i18n.t("test.GET_QUESTIONS_SUCCESS"),
+			{
+				total,
+				page: query.page,
+				limit: query.limit,
+				totalPages: Math.ceil(total / query.limit),
+			},
 		);
 	}
 }
