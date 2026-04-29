@@ -13,6 +13,7 @@ import { BaseException } from "../../shared/exception/base.exception";
 import { UserRole } from "../../shared/types/user-role.enum";
 
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
+import { batchLoad } from "./utils/batch-load.util";
 import calculateCorrectRate from "./utils/calculate-correct-rate.util";
 import calculateScore from "./utils/calculate-score.util";
 
@@ -50,27 +51,25 @@ export class TestService {
 		const test = await this.testRepository.findOne({ where: { id: testId } });
 		const totalQuestions = test?.totalQuestions ?? answers.length;
 
+		const questionIds = answers.map((a) => a.questionId);
+		const questionsMap = await batchLoad(this.questionRepository, questionIds);
+
+		const optionIds = answers.filter((a) => a.optionId).map((a) => a.optionId!);
+		const choicesMap = await batchLoad(this.choiceRepository, optionIds);
+
 		let correct = 0;
 
 		for (const answer of answers) {
-			const question = await this.questionRepository.findOne({
-				where: { id: answer.questionId },
-			});
+			const question = questionsMap.get(answer.questionId);
 			if (!question) {
 				throw new BaseException(400, "INVALID_QUESTION");
 			}
 
 			if (answer.optionId) {
-				const choice = await this.choiceRepository.findOne({
-					where: { id: answer.optionId },
-				});
-				if (choice) {
-					correct++;
-				} else {
+				const choice = choicesMap.get(answer.optionId);
+				if (!choice) {
 					throw new BaseException(400, "INVALID_CHOICE");
-				}
-
-				if (choice.isCorrect) {
+				} else if (choice.isCorrect) {
 					correct++;
 				}
 			} else if (typeof answer.answer === "string") {
@@ -82,8 +81,6 @@ export class TestService {
 				if (expected === actual) {
 					correct++;
 				}
-			} else {
-				throw new BaseException(400, "NO_ANSWER_PROVIDED");
 			}
 		}
 

@@ -5,25 +5,24 @@ import {
 	Post,
 	Query,
 	Sse,
-	UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { I18n, I18nContext } from "nestjs-i18n";
 import { Observable } from "rxjs";
-import { Roles } from "../../shared/decorators/roles.decorator";
+import { Auth } from "../../shared/decorators/auth.decorator";
 import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import { BaseException } from "../../shared/exception/base.exception";
 import { OpenRouterService } from "../../shared/infras/openRouter.service";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { UserRole } from "../../shared/types/user-role.enum";
-import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
-import { RolesGuard } from "../auth/guards/role.guard";
 import { SavedTestRequestDto } from "./dtos/saved-test.req.dto";
 import { TeacherPromptRequestDto } from "./dtos/teacher-prompt.req.dto";
 import { TestGenerationService } from "./test-generation.service";
 
 @Controller({ path: "english-tests", version: "1" })
+@Auth(UserRole.TEACHER)
+@ApiBearerAuth()
 export class TestGenerationController {
 	constructor(
 		private readonly openRouterService: OpenRouterService,
@@ -31,9 +30,6 @@ export class TestGenerationController {
 	) {}
 
 	@Sse("generate-stream")
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
-	@Roles(UserRole.TEACHER)
 	streamTestGeneration(
 		@Query() dto: TeacherPromptRequestDto,
 	): Observable<MessageEvent> {
@@ -41,9 +37,6 @@ export class TestGenerationController {
 	}
 
 	@Post("")
-	@UseGuards(JwtAuthGuard, RolesGuard)
-	@ApiBearerAuth()
-	@Roles(UserRole.TEACHER)
 	async saveTest(
 		@Body() dto: SavedTestRequestDto,
 		@I18n() i18n: I18nContext,
