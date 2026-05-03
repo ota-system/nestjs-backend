@@ -1,11 +1,17 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+
 import { ChoiceEntity } from "../../database/entities/choice.entity";
+import { ClassEntity } from "../../database/entities/class.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
+import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { TestEntity } from "../../database/entities/test.entity";
+
 import { BaseException } from "../../shared/exception/base.exception";
+import { UserRole } from "../../shared/types/user-role.enum";
+
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { batchLoad } from "./utils/batch-load.util";
 import calculateCorrectRate from "./utils/calculate-correct-rate.util";
@@ -25,7 +31,54 @@ export class TestService {
 
 		@InjectRepository(StudentResultEntity)
 		private readonly studentResultRepository: Repository<StudentResultEntity>,
+
+		@InjectRepository(ClassEntity)
+		private readonly classRepository: Repository<ClassEntity>,
+
+		@InjectRepository(StudentClassEntity)
+		private readonly studentClassRepository: Repository<StudentClassEntity>,
 	) {}
+
+	async validateTestAccess(
+		testId: string,
+		userId: string,
+		role: UserRole,
+	): Promise<TestEntity> {
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: { class: true },
+		});
+
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+
+		const now = new Date();
+
+		if (now < test.startedTime) {
+			throw new BaseException(403, "TEST_NOT_STARTED");
+		}
+
+		const endTime = new Date(
+			test.startedTime.getTime() + test.duration * 60 * 1000,
+		);
+		if (now > endTime) {
+			throw new BaseException(403, "TEST_ENDED");
+		}
+
+		const hasAccess = await this.checkAccess(test.class.id, userId, role);
+		if (!hasAccess) {
+			throw new BaseException(403, "TEST_ACCESS_DENIED");
+		}
+
+		return test;
+	}
+
+	async getExam(testId: string, userId: string, role: UserRole) {
+		const test = await this.validateTestAccess(testId, userId, role);
+
+		return test;
+	}
 
 	async submitTest({
 		dto,
@@ -91,5 +144,25 @@ export class TestService {
 			correctQuestions: correct,
 			totalQuestions,
 		};
+	}
+
+	private async checkAccess(
+		classId: string,
+		userId: string,
+		role: UserRole,
+	): Promise<boolean> {
+		if (role === UserRole.TEACHER) {
+			return this.classRepository.exists({
+				where: { id: classId, teacher: { id: userId } },
+			});
+		}
+
+		if (role === UserRole.STUDENT) {
+			return this.studentClassRepository.exists({
+				where: { class: { id: classId }, student: { id: userId } },
+			});
+		}
+
+		return false;
 	}
 }

@@ -8,6 +8,7 @@ import { I18nModule } from "nestjs-i18n";
 import { AuthModule } from "./features/auth/auth.module";
 import { ClassModule } from "./features/class/class.module";
 import { HealthModule } from "./features/health/health.module";
+import { QuestionModule } from "./features/question/question.module";
 import { TestModule } from "./features/test/test.module";
 import { TestGenerationModule } from "./features/test-generation/test-generation.module";
 import { UserModule } from "./features/user/user.module";
@@ -66,6 +67,7 @@ import { SharedModule } from "./shared/shared.module";
 		ClassModule,
 		TestGenerationModule,
 		TestModule,
+		QuestionModule,
 	],
 })
 export class AppModule {}

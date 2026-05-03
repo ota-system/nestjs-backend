@@ -25,5 +25,9 @@
 	"AI_STREAM_ERROR": "Lỗi khi stream dữ liệu từ AI.",
 	"INVALID_QUESTION": "Câu hỏi không hợp lệ.",
 	"INVALID_CHOICE": "Lựa chọn không hợp lệ.",
-	"NO_ANSWER_PROVIDED": "Không có câu trả lời được cung cấp."
+	"NO_ANSWER_PROVIDED": "Không có câu trả lời được cung cấp.",
+	"TEST_NOT_FOUND": "Không tìm thấy bài thi.",
+	"TEST_NOT_STARTED": "Bài thi chưa bắt đầu.",
+	"TEST_ENDED": "Bài thi đã kết thúc.",
+	"TEST_ACCESS_DENIED": "Bạn không có quyền truy cập bài thi này."
 }

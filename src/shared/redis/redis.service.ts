@@ -108,4 +108,26 @@ export class RedisService {
 		const exists = await this.redis.exists(key);
 		return exists > 0;
 	}
+
+	async getCache<T>(key: string): Promise<T | null> {
+		const value = await this.redis.get(key);
+		if (!value) return null;
+		try {
+			return JSON.parse(value) as T;
+		} catch {
+			return null;
+		}
+	}
+
+	async setCache(
+		key: string,
+		value: unknown,
+		ttlSeconds: number,
+	): Promise<void> {
+		await this.redis.set(key, JSON.stringify(value), "EX", ttlSeconds);
+	}
+
+	async deleteCache(key: string): Promise<void> {
+		await this.redis.del(key);
+	}
 }
