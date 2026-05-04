@@ -8,7 +8,7 @@ export class ChoiceDto {
 	answer!: string;
 }
 
-export class ExamQuestionDto {
+export class QuestionDto {
 	@Expose()
 	id!: string;
 
@@ -24,4 +24,12 @@ export class ExamQuestionDto {
 	@Expose()
 	@Type(() => ChoiceDto)
 	choices!: ChoiceDto[];
+}
+
+export class TestQuestionDto {
+	@Expose()
+	questions!: QuestionDto[];
+
+	@Expose()
+	totalQuestions!: number;
 }
