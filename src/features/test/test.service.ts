@@ -39,20 +39,7 @@ export class TestService {
 		private readonly studentClassRepository: Repository<StudentClassEntity>,
 	) {}
 
-	async validateTestAccess(
-		testId: string,
-		userId: string,
-		role: UserRole,
-	): Promise<TestEntity> {
-		const test = await this.testRepository.findOne({
-			where: { id: testId },
-			relations: { class: true },
-		});
-
-		if (!test) {
-			throw new BaseException(404, "TEST_NOT_FOUND");
-		}
-
+	async validateTestAccess(test: TestEntity, userId: string, role: UserRole) {
 		const now = new Date();
 
 		if (now < test.startedTime) {
@@ -70,12 +57,18 @@ export class TestService {
 		if (!hasAccess) {
 			throw new BaseException(403, "TEST_ACCESS_DENIED");
 		}
-
-		return test;
 	}
 
 	async getExam(testId: string, userId: string, role: UserRole) {
-		const test = await this.validateTestAccess(testId, userId, role);
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: { class: true },
+		});
+
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+		await this.validateTestAccess(test, userId, role);
 
 		return test;
 	}

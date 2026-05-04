@@ -61,11 +61,8 @@ export class TestController {
 		@Query() query: PageParams,
 		@User() user: JwtPayload,
 	) {
-		const test = await this.testService.validateTestAccess(
-			testId,
-			user.sub,
-			user.role,
-		);
+		const test = await this.testService.getExam(testId, user.sub, user.role);
+
 		const { data, total } = await this.questionService.getQuestionsForTest(
 			test,
 			query.page,
