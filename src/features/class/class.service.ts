@@ -59,11 +59,13 @@ export class ClassService {
 			return await this.classRepository.find({
 				where: { teacher: { id: userId } },
 				order: { createdAt: "DESC" },
+				relations: ["students", "students.student"],
 			});
 		} else if (role === UserRole.STUDENT) {
 			return await this.classRepository.find({
 				where: { students: { student: { id: userId } } },
 				order: { createdAt: "DESC" },
+				relations: ["teacher"],
 			});
 		}
 		return [];
