@@ -82,7 +82,10 @@ export class TestService {
 	}) {
 		const { testId, answers } = dto;
 
-		const test = await this.testRepository.findOne({ where: { id: testId } });
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: { topic: true },
+		});
 		const totalQuestions = test?.totalQuestions ?? answers.length;
 
 		const questionIds = answers.map((a) => a.questionId);
@@ -133,7 +136,7 @@ export class TestService {
 		return {
 			score,
 			correctRate: correctRate,
-			subject: test?.topic.topicName ?? "Unknown",
+			subject: test?.topic?.topicName ?? "Unknown",
 			correctQuestions: correct,
 			totalQuestions,
 		};
