@@ -1,5 +1,5 @@
 import { RedisService as NestRedisService } from "@liaoliaots/nestjs-redis";
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import type Redis from "ioredis";
 
 export type RefreshSessionRecord = {
@@ -110,11 +110,19 @@ export class RedisService {
 	}
 
 	async getCache<T>(key: string): Promise<T | null> {
-		const value = await this.redis.get(key);
-		if (!value) return null;
+		if (!key) return null;
+
 		try {
-			return JSON.parse(value) as T;
-		} catch {
+			const value = await this.redis.get(key);
+			if (!value) return null;
+
+			try {
+				return JSON.parse(value) as T;
+			} catch (err) {
+				await this.redis.del(key);
+				return null;
+			}
+		} catch (err) {
 			return null;
 		}
 	}
@@ -122,12 +130,22 @@ export class RedisService {
 	async setCache(
 		key: string,
 		value: unknown,
-		ttlSeconds: number,
+		ttlSeconds?: number,
 	): Promise<void> {
-		await this.redis.set(key, JSON.stringify(value), "EX", ttlSeconds);
-	}
+		if (!key) return;
 
-	async deleteCache(key: string): Promise<void> {
-		await this.redis.del(key);
+		try {
+			const serialized = JSON.stringify(value);
+
+			if (!serialized) return;
+
+			if (ttlSeconds && ttlSeconds > 0) {
+				await this.redis.set(key, serialized, "EX", ttlSeconds);
+			} else {
+				await this.redis.set(key, serialized);
+			}
+		} catch (err) {
+			Logger.error(`Redis SET error for key: ${key}`, err);
+		}
 	}
 }
