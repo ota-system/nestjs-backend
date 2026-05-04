@@ -7,6 +7,7 @@ import { TestEntity } from "../../database/entities/test.entity";
 import { UserEntity } from "../../database/entities/user.entity";
 import { BaseException } from "../../shared/exception/base.exception";
 import { UserRole } from "../../shared/types/user-role.enum";
+import { ClassWithCounts } from "./class.type";
 import { CreateClassDto } from "./dtos/create-class.dto";
 import { AlreadyJoinedException } from "./exceptions/already-joined.exception";
 
@@ -56,17 +57,23 @@ export class ClassService {
 
 	async getClassList(userId: string, role: string) {
 		if (role === UserRole.TEACHER) {
-			return await this.classRepository.find({
+			const classes = await this.classRepository.find({
 				where: { teacher: { id: userId } },
 				order: { createdAt: "DESC" },
-				relations: ["students", "students.student"],
+				relations: ["teacher", "students", "tests"],
+				loadEagerRelations: false,
 			});
+
+			return classes.map((classroom) => this.withCounts(classroom));
 		} else if (role === UserRole.STUDENT) {
-			return await this.classRepository.find({
+			const classes = await this.classRepository.find({
 				where: { students: { student: { id: userId } } },
 				order: { createdAt: "DESC" },
-				relations: ["teacher"],
+				relations: ["teacher", "students", "tests"],
+				loadEagerRelations: false,
 			});
+
+			return classes.map((classroom) => this.withCounts(classroom));
 		}
 		return [];
 	}
@@ -206,13 +213,22 @@ export class ClassService {
 		const classroom = await this.classRepository.findOne({
 			where: { code: code },
 			relations: ["teacher"],
+			loadEagerRelations: false,
 		});
 
 		if (!classroom) {
 			throw new BaseException(404, "CLASS_NOT_FOUND_OR_INVALID_CODE");
 		}
 
-		return classroom;
+		return this.withCounts(classroom);
+	}
+
+	private withCounts(classroom: ClassEntity): ClassWithCounts {
+		return {
+			...classroom,
+			studentCount: classroom.students?.length ?? 0,
+			testCount: classroom.tests?.length ?? 0,
+		};
 	}
 
 	private async isUserExist(userId: string) {
