@@ -25,5 +25,9 @@
 	"AI_STREAM_ERROR": "Failed to stream data from AI service.",
 	"INVALID_QUESTION": "Invalid question provided.",
 	"INVALID_CHOICE": "Invalid choice provided.",
-	"NO_ANSWER_PROVIDED": "No answer provided."
+	"NO_ANSWER_PROVIDED": "No answer provided.",
+	"TEST_NOT_FOUND": "Test not found.",
+	"TEST_NOT_STARTED": "This test has not started yet.",
+	"TEST_ENDED": "This test has already ended.",
+	"TEST_ACCESS_DENIED": "You do not have permission to access this test."
 }

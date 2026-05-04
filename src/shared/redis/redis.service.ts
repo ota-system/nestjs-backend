@@ -1,6 +1,7 @@
 import { RedisService as NestRedisService } from "@liaoliaots/nestjs-redis";
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import type Redis from "ioredis";
+import { z } from "zod";
 
 export type RefreshSessionRecord = {
 	userId: string;
@@ -107,5 +108,49 @@ export class RedisService {
 		const key = this.getRevokedAccessSessionKey(sessionId);
 		const exists = await this.redis.exists(key);
 		return exists > 0;
+	}
+
+	async getCache<T>(key: string, schema: z.ZodSchema<T>): Promise<T | null> {
+		if (!key) return null;
+
+		try {
+			const value = await this.redis.get(key);
+			if (!value) return null;
+
+			const parsed = JSON.parse(value);
+
+			const result = schema.safeParse(parsed);
+			if (!result.success) {
+				await this.redis.del(key);
+				return null;
+			}
+
+			return result.data;
+		} catch {
+			await this.redis.del(key).catch(() => {});
+			return null;
+		}
+	}
+
+	async setCache(
+		key: string,
+		value: unknown,
+		ttlSeconds?: number,
+	): Promise<void> {
+		if (!key) return;
+
+		try {
+			const serialized = JSON.stringify(value);
+
+			if (!serialized) return;
+
+			if (ttlSeconds && ttlSeconds > 0) {
+				await this.redis.set(key, serialized, "EX", ttlSeconds);
+			} else {
+				await this.redis.set(key, serialized);
+			}
+		} catch (err) {
+			Logger.error(`Redis SET error for key: ${key}`, err);
+		}
 	}
 }
