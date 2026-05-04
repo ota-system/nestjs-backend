@@ -8,11 +8,11 @@ import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { PageParams } from "../../shared/types/page-param.type";
 import { UserRole } from "../../shared/types/user-role.enum";
-import { ExamQuestionDto } from "../question/dtos/question-res.dto";
+import { TestQuestionDto } from "../question/dtos/question-res.dto";
 import { QuestionService } from "../question/question.service";
-import { ExamResponseDto } from "./dtos/exam-res.dto";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { SubmitTestResponseDto } from "./dtos/submit-test.res.dto";
+import { ExamResponseDto } from "./dtos/tesst-res.dto";
 import { TestService } from "./test.service";
 
 @ApiBearerAuth()
@@ -45,11 +45,10 @@ export class TestController {
 		@Param("testId") testId: string,
 		@User() user: JwtPayload,
 	) {
-		const exam = await this.testService.getExam(testId, user.sub, user.role);
+		const test = await this.testService.getExam(testId, user.sub, user.role);
 		return BaseResponse.ok(
-			plainToInstance(ExamResponseDto, exam, { excludeExtraneousValues: true }),
+			plainToInstance(ExamResponseDto, test, { excludeExtraneousValues: true }),
 			i18n.t("test.GET_EXAM_SUCCESS"),
-			{ totalQuestions: exam.totalQuestions },
 		);
 	}
 
@@ -63,19 +62,20 @@ export class TestController {
 	) {
 		const test = await this.testService.getExam(testId, user.sub, user.role);
 
-		const { data, total } = await this.questionService.getQuestionsForTest(
+		const response = await this.questionService.getQuestionsForTest(
 			test,
 			query.page,
 			query.limit,
 		);
 		return BaseResponse.ok(
-			plainToInstance(ExamQuestionDto, data, { excludeExtraneousValues: true }),
+			plainToInstance(TestQuestionDto, response, {
+				excludeExtraneousValues: true,
+			}),
 			i18n.t("test.GET_QUESTIONS_SUCCESS"),
 			{
-				total,
 				page: query.page,
 				limit: query.limit,
-				totalPages: Math.ceil(total / query.limit),
+				totalPages: Math.ceil(response.totalQuestions / query.limit),
 			},
 		);
 	}

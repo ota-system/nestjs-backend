@@ -1,6 +1,7 @@
 import { RedisService as NestRedisService } from "@liaoliaots/nestjs-redis";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import type Redis from "ioredis";
+import { z } from "zod";
 
 export type RefreshSessionRecord = {
 	userId: string;
@@ -109,20 +110,24 @@ export class RedisService {
 		return exists > 0;
 	}
 
-	async getCache<T>(key: string): Promise<T | null> {
+	async getCache<T>(key: string, schema: z.ZodSchema<T>): Promise<T | null> {
 		if (!key) return null;
 
 		try {
 			const value = await this.redis.get(key);
 			if (!value) return null;
 
-			try {
-				return JSON.parse(value) as T;
-			} catch (err) {
+			const parsed = JSON.parse(value);
+
+			const result = schema.safeParse(parsed);
+			if (!result.success) {
 				await this.redis.del(key);
 				return null;
 			}
-		} catch (err) {
+
+			return result.data;
+		} catch {
+			await this.redis.del(key).catch(() => {});
 			return null;
 		}
 	}

@@ -12,4 +12,7 @@ export class ExamResponseDto {
 
 	@Expose()
 	startedTime!: Date;
+
+	@Expose()
+	totalQuestions!: number;
 }
