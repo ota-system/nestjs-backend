@@ -4,4 +4,6 @@
 	"SUBMIT_TEST_SUCCESS": "Test submitted successfully",
 	"GET_EXAM_SUCCESS": "Get exam detail successful",
 	"GET_QUESTIONS_SUCCESS": "Get exam questions successful"
+	"GET_EXAM_LIST_SUCCESS": "Exam list retrieved successfully",
+	"GET_EXAM_DETAIL_SUCCESS": "Exam detail retrieved successfully"
 }

@@ -4,4 +4,6 @@
 	"SUBMIT_TEST_SUCCESS": "Nộp bài thi thành công",
 	"GET_EXAM_SUCCESS": "Lấy chi tiết bài thi thành công",
 	"GET_QUESTIONS_SUCCESS": "Lấy câu hỏi bài thi thành công"
+	"GET_EXAM_LIST_SUCCESS": "Lấy danh sách bài thi thành công",
+	"GET_EXAM_DETAIL_SUCCESS": "Lấy chi tiết bài thi thành công"
 }
