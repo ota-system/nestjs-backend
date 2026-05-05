@@ -13,6 +13,7 @@ import { BaseException } from "../../shared/exception/base.exception";
 import { UserRole } from "../../shared/types/user-role.enum";
 
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
+import { SubmitTestAnswer } from "./type";
 import { batchLoad } from "./utils/batch-load.util";
 import calculateCorrectRate from "./utils/calculate-correct-rate.util";
 import calculateScore from "./utils/calculate-score.util";
@@ -100,8 +101,12 @@ export class TestService {
 		const choicesMap = await batchLoad(this.choiceRepository, optionIds);
 
 		let correct = 0;
+		const studentAnswers: SubmitTestAnswer[] = answers.map((answer) => ({
+			...answer,
+			isCorrect: false,
+		}));
 
-		for (const answer of answers) {
+		for (const answer of studentAnswers) {
 			const question = questionsMap.get(answer.questionId);
 			if (!question) {
 				throw new BaseException(400, "INVALID_QUESTION");
@@ -112,6 +117,7 @@ export class TestService {
 				if (!choice) {
 					throw new BaseException(400, "INVALID_CHOICE");
 				} else if (choice.isCorrect) {
+					answer.isCorrect = true;
 					correct++;
 				}
 			} else if (typeof answer.answer === "string") {
@@ -121,6 +127,7 @@ export class TestService {
 					.toLowerCase();
 				const actual = answer.answer.trim().toLowerCase();
 				if (expected === actual) {
+					answer.isCorrect = true;
 					correct++;
 				}
 			}
@@ -128,14 +135,15 @@ export class TestService {
 
 		const score = calculateScore(correct, totalQuestions);
 
+		const correctRate = calculateCorrectRate(correct, totalQuestions);
+
 		const studentResult = this.studentResultRepository.create({
 			student: { id: studentId },
 			exam: { id: testId },
 			score,
-			studentAnswers: answers,
+			studentAnswers,
+			correctRate: correctRate,
 		});
-
-		const correctRate = calculateCorrectRate(correct, totalQuestions);
 
 		await this.studentResultRepository.save(studentResult);
 		return {
