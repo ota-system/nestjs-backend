@@ -45,7 +45,6 @@ export class ClassService {
 	private async generateUniqueClassCode(): Promise<string> {
 		let code: string;
 		let isExisted: boolean;
-
 		do {
 			code = Math.floor(100000 + Math.random() * 900000).toString();
 			isExisted = await this.isClassCodeExisted(code);
@@ -225,5 +224,47 @@ export class ClassService {
 		return await this.studentClassRepository.exists({
 			where: { student: { id: studentId }, class: { id: classId } },
 		});
+	}
+
+	async getTestsWithStatsByClass(classId: string, teacherId: string) {
+		const isTeacher = await this.classRepository.exists({
+			where: { id: classId, teacher: { id: teacherId } },
+		});
+		if (!isTeacher) {
+			throw new BaseException(403, "CLASS_ACCESS_DENIED");
+		}
+
+		const tests = await this.testRepository
+			.createQueryBuilder("test")
+			.leftJoin("test.topic", "topic")
+			.leftJoin("test.studentResults", "sr")
+			.where("test.class.id = :classId", { classId })
+			.select("test.id", "id")
+			.addSelect("test.testName", "testName")
+			.addSelect("test.duration", "duration")
+			.addSelect("test.totalQuestions", "totalQuestions")
+			.addSelect("test.antiCheating", "antiCheating")
+			.addSelect("topic.topicName", "topicName")
+			.addSelect("COUNT(sr.id)", "attempts")
+			.addSelect("COALESCE(AVG(sr.score), 0)", "averageScore")
+			.addSelect("COALESCE(MAX(sr.score), 0)", "highestScore")
+			.groupBy("test.id")
+			.addGroupBy("topic.id")
+			.getRawMany();
+
+		return tests.map((t) => ({
+			id: t.id,
+			testName: t.testName,
+			duration: t.duration,
+			totalQuestions: t.totalQuestions,
+			antiCheating: !!t.antiCheating,
+			topicName: t.topicName,
+			maxScore: 10,
+			stats: {
+				attempts: Number(t.attempts),
+				averageScore: Number(t.averageScore),
+				highestScore: Number(t.highestScore),
+			},
+		}));
 	}
 }
