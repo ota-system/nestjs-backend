@@ -60,6 +60,11 @@ export class TestService {
 	}
 
 	async getExam(testId: string, userId: string, role: UserRole) {
+		if (testId.length !== 36) {
+			console.warn(`Invalid testId format: ${testId}`);
+			throw new BaseException(400, "TEST_NOT_FOUND");
+		}
+
 		const test = await this.testRepository.findOne({
 			where: { id: testId },
 			relations: { class: true },
