@@ -15,26 +15,20 @@ export class StudentService {
 
 	async getStudentResults(studentId: string) {
 		const data = await this.studentResultRepository
-			.createQueryBuilder("student_results")
-			.leftJoin("student_results.exam", "test")
+			.createQueryBuilder("sr")
+			.leftJoin("sr.exam", "test")
 			.leftJoin("test.class", "class")
 			.select([
 				'test.testName AS "testName"',
 				'class.name AS "className"',
-				'student_results.id AS "id"',
-				'student_results.score AS "score"',
+				'sr.id AS "id"',
+				'sr.score AS "score"',
+				// 'sr.time_spent AS "timeSpent', // REFACTOR: OTA-70
 				'test.startedTime AS "testDate"',
-				// 'student_results.fraudCount AS "fraudCount"', //REFACTOR:OTA-70
+				// 'sr.fraudCount AS "fraudCount"', // REFACTOR: OTA-70
+				// 'sr.correctRate AS "correctRate"', // REFACTOR: OTA-70
 			])
-			// .addSelect(`
-			//     (
-			//         SELECT
-			//             COUNT(*) FILTER (
-			//                 WHERE (answer->>'is_correct')::boolean = true
-			//             ) * 1.0 / NULLIF(COUNT(*), 0)
-			//         FROM jsonb_array_elements(student_results.student_answers) AS answer
-			//     )`, 'correctRate')      //REFACTOR:OTA-70   //- line 28 - 35
-			.where("student_results.student_id = :studentId", { studentId })
+			.where("sr.student_id = :studentId", { studentId })
 			.getRawMany();
 
 		return plainToInstance(TestResultResponseDto, data, {
