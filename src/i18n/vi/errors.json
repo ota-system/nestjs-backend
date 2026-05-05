@@ -29,5 +29,6 @@
 	"TEST_NOT_FOUND": "Không tìm thấy bài thi.",
 	"TEST_NOT_STARTED": "Bài thi chưa bắt đầu.",
 	"TEST_ENDED": "Bài thi đã kết thúc.",
-	"TEST_ACCESS_DENIED": "Bạn không có quyền truy cập bài thi này."
+	"TEST_ACCESS_DENIED": "Bạn không có quyền truy cập bài thi này.",
+	"RESOURCE_ACCESS_DENIED": "Bạn không có quyền truy cập tài nguyên này."
 }
