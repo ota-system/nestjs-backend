@@ -9,6 +9,7 @@ import { AuthModule } from "./features/auth/auth.module";
 import { ClassModule } from "./features/class/class.module";
 import { HealthModule } from "./features/health/health.module";
 import { QuestionModule } from "./features/question/question.module";
+import { StudentModule } from "./features/student/student.module";
 import { TestModule } from "./features/test/test.module";
 import { TestGenerationModule } from "./features/test-generation/test-generation.module";
 import { UserModule } from "./features/user/user.module";
@@ -68,6 +69,7 @@ import { SharedModule } from "./shared/shared.module";
 		TestGenerationModule,
 		TestModule,
 		QuestionModule,
+		StudentModule,
 	],
 })
 export class AppModule {}
