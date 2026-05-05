@@ -79,4 +79,43 @@ export class TestController {
 			},
 		);
 	}
+
+	@Get(":testId/summary")
+	@Auth(UserRole.TEACHER)
+	async getTestSummary(
+		@I18n() i18n: I18nContext,
+		@Param("testId") testId: string,
+		@User() user: JwtPayload,
+	) {
+		await this.testService.getExam(testId, user.sub, user.role); // Verify access
+		const summary = await this.testService.getSummary(testId);
+		return BaseResponse.ok(
+			summary,
+			await i18n.t("test.GET_SUMMARY_SUCCESS", {
+				defaultValue: "Lấy thống kê bài thi thành công",
+			}),
+		);
+	}
+
+	@Get(":testId/students")
+	@Auth(UserRole.TEACHER)
+	async getTestStudents(
+		@I18n() i18n: I18nContext,
+		@Param("testId") testId: string,
+		@Query() query: PageParams,
+		@User() user: JwtPayload,
+	) {
+		await this.testService.getExam(testId, user.sub, user.role); // Verify access
+		const result = await this.testService.getStudentTestListResult(
+			testId,
+			query.page,
+			query.limit,
+		);
+		return BaseResponse.ok(
+			result,
+			await i18n.t("test.GET_STUDENTS_SUCCESS", {
+				defaultValue: "Lấy danh sách thí sinh thành công",
+			}),
+		);
+	}
 }
