@@ -8,10 +8,9 @@ import { QuestionEntity } from "../../database/entities/question.entity";
 import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { TestEntity } from "../../database/entities/test.entity";
-
+import { UUID_REGEX } from "../../shared/constants/uuid.constant";
 import { BaseException } from "../../shared/exception/base.exception";
 import { UserRole } from "../../shared/types/user-role.enum";
-
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { SubmitTestAnswer } from "./type";
 import { batchLoad } from "./utils/batch-load.util";
@@ -61,9 +60,9 @@ export class TestService {
 	}
 
 	async getExam(testId: string, userId: string, role: UserRole) {
-		if (testId.length !== 36) {
+		if (!UUID_REGEX.test(testId)) {
 			console.warn(`Invalid testId format: ${testId}`);
-			throw new BaseException(400, "TEST_NOT_FOUND");
+			throw new BaseException(404, "TEST_NOT_FOUND");
 		}
 
 		const test = await this.testRepository.findOne({
