@@ -49,9 +49,9 @@ export class StudentResultEntity extends BaseEntity {
 	correctRate!: number;
 
 	// For future use: store fraud detection results
-	// @Column({ type: "json", nullable: true })
-	// fraud!: Array<{
-	// 	type: string;
-	// 	detail: string;
-	// }>;
+	@Column({ type: "json", nullable: true })
+	fraud?: Array<{
+		type: string;
+		detail: string;
+	}>;
 }
