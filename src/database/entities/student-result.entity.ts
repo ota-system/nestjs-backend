@@ -39,5 +39,19 @@ export class StudentResultEntity extends BaseEntity {
 		questionId: string;
 		optionId?: string;
 		answer?: string;
+		isCorrect: boolean;
 	}>;
+
+	@Column({ name: "time_spent", type: "int", default: 0 })
+	timespent!: number;
+
+	@Column({ name: "correct_rate", type: "float", default: 0 })
+	correctRate!: number;
+
+	// For future use: store fraud detection results
+	// @Column({ type: "json", nullable: true })
+	// fraud!: Array<{
+	// 	type: string;
+	// 	detail: string;
+	// }>;
 }

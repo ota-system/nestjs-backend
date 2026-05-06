@@ -96,20 +96,6 @@ export class ClassController {
 		return BaseResponse.ok(tests, await i18n.t("test.GET_EXAM_LIST_SUCCESS"));
 	}
 
-	@Get("tests/:testId")
-	@Auth(UserRole.STUDENT)
-	async getTestDetail(
-		@I18n() i18n: I18nContext,
-		@Param("testId") testId: string,
-		@User() user: JwtPayload,
-	) {
-		const test = await this.classService.getTestDetail({
-			testId,
-			studentId: user.sub,
-		});
-		return BaseResponse.ok(test, await i18n.t("test.GET_EXAM_DETAIL_SUCCESS"));
-	}
-
 	@Get(":id/students")
 	@Auth(UserRole.TEACHER, UserRole.STUDENT)
 	async getStudentsInClass(
