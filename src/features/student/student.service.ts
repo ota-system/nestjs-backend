@@ -3,8 +3,8 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { plainToInstance } from "class-transformer";
 import { Repository } from "typeorm";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
-import { OverallResultResponseDto } from "./dto/overall-results-res.dto";
-import { TestResultResponseDto } from "./dto/test-result-res.dto";
+import { OverallResultResponseDto } from "./dtos/overall-results-res.dto";
+import { TestResultResponseDto } from "./dtos/test-result-res.dto";
 
 @Injectable()
 export class StudentService {
