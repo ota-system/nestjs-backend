@@ -29,6 +29,12 @@ export class ClassResponseDto {
 	subject!: string;
 
 	@Expose()
+	studentCount!: number;
+
+	@Expose()
+	testCount!: number;
+
+	@Expose()
 	code!: string;
 
 	@Expose()
