@@ -39,13 +39,28 @@ export class TestController {
 	}
 
 	@Get(":testId")
-	@Auth(UserRole.TEACHER, UserRole.STUDENT)
-	async getExamInfo(
+	@Auth(UserRole.STUDENT)
+	async getTestInfo(
 		@I18n() i18n: I18nContext,
 		@Param("testId") testId: string,
+		@Query() query: { detailed?: boolean },
 		@User() user: JwtPayload,
 	) {
-		const test = await this.testService.getExam(testId, user.sub, user.role);
+		if (query.detailed) {
+			const test = await this.testService.getDetailedTestInfo({
+				testId,
+				studentId: user.sub,
+			});
+			return BaseResponse.ok(
+				test,
+				await i18n.t("test.GET_EXAM_DETAIL_SUCCESS"),
+			);
+		}
+		const test = await this.testService.getTestInfo(
+			testId,
+			user.sub,
+			user.role,
+		);
 		return BaseResponse.ok(
 			plainToInstance(ExamResponseDto, test, { excludeExtraneousValues: true }),
 			i18n.t("test.GET_EXAM_SUCCESS"),
@@ -60,7 +75,11 @@ export class TestController {
 		@Query() query: PageParams,
 		@User() user: JwtPayload,
 	) {
-		const test = await this.testService.getExam(testId, user.sub, user.role);
+		const test = await this.testService.getTestInfo(
+			testId,
+			user.sub,
+			user.role,
+		);
 
 		const response = await this.questionService.getQuestionsForTest(
 			test,
