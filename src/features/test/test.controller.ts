@@ -6,6 +6,7 @@ import {
 	ParseBoolPipe,
 	Post,
 	Query,
+	UseInterceptors,
 } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
@@ -13,6 +14,12 @@ import { I18n, I18nContext } from "nestjs-i18n";
 import { Auth } from "../../shared/decorators/auth.decorator";
 import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
+import {
+	InvalidateCache,
+	SmartCache,
+	UniversalInvalidateCacheInterceptor,
+	UniversalSmartCacheInterceptor,
+} from "../../shared/interceptors/smart-cache.interceptor";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { PageParams } from "../../shared/types/page-param.type";
 import { UserRole } from "../../shared/types/user-role.enum";
@@ -34,6 +41,10 @@ export class TestController {
 	@Post("/submit")
 	@Auth(UserRole.STUDENT)
 	@ApiBearerAuth()
+	@InvalidateCache([
+		{ keyPrefix: "test_students", target: "body", targetField: "testId" },
+	])
+	@UseInterceptors(UniversalInvalidateCacheInterceptor)
 	async submit(
 		@Body() dto: SubmitTestRequestDto,
 		@User() user: JwtPayload,
@@ -114,7 +125,7 @@ export class TestController {
 		@Param("testId") testId: string,
 		@User() user: JwtPayload,
 	) {
-		await this.testService.getExam(testId, user.sub, user.role); // Verify access
+		await this.testService.getTestInfo(testId, user.sub, user.role); // Verify access
 		const summary = await this.testService.getSummary(testId);
 		return BaseResponse.ok(
 			summary,
@@ -126,13 +137,20 @@ export class TestController {
 
 	@Get(":testId/students")
 	@Auth(UserRole.TEACHER)
+	@SmartCache({
+		keyPrefix: "test_students",
+		target: "params",
+		targetField: "testId",
+		ttlSeconds: 60,
+	})
+	@UseInterceptors(UniversalSmartCacheInterceptor)
 	async getTestStudents(
 		@I18n() i18n: I18nContext,
 		@Param("testId") testId: string,
 		@Query() query: PageParams,
 		@User() user: JwtPayload,
 	) {
-		await this.testService.getExam(testId, user.sub, user.role); // Verify access
+		await this.testService.getTestInfo(testId, user.sub, user.role); // Verify access
 		const result = await this.testService.getStudentTestListResult(
 			testId,
 			query.page,

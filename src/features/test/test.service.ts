@@ -253,7 +253,7 @@ export class TestService {
 				violations,
 				score: result.score,
 				totalScore: maxScore,
-				percentage: Math.round((result.score / maxScore) * 100),
+				percentage: result.correctRate,
 				durationMinutes,
 				submittedAt: result.createdAt.toISOString().split("T")[0],
 			};

@@ -7,6 +7,10 @@ import { QuestionEntity } from "../../database/entities/question.entity";
 import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { TestEntity } from "../../database/entities/test.entity";
+import {
+	UniversalInvalidateCacheInterceptor,
+	UniversalSmartCacheInterceptor,
+} from "../../shared/interceptors/smart-cache.interceptor";
 import { StudentResultService } from "../../shared/services/student-result.service";
 import { SharedModule } from "../../shared/shared.module";
 import { QuestionModule } from "../question/question.module";
@@ -27,7 +31,12 @@ import { TestService } from "./test.service";
 		QuestionModule,
 	],
 	controllers: [TestController],
-	providers: [TestService, StudentResultService],
+	providers: [
+		TestService,
+		StudentResultService,
+		UniversalSmartCacheInterceptor,
+		UniversalInvalidateCacheInterceptor,
+	],
 	exports: [TestService],
 })
 export class TestModule {}

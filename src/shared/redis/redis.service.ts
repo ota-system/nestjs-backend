@@ -132,6 +132,15 @@ export class RedisService {
 		}
 	}
 
+	async delCache(key: string): Promise<void> {
+		if (!key) return;
+		try {
+			await this.redis.del(key);
+		} catch (err) {
+			Logger.error(`Redis DEL error for key: ${key}`, err);
+		}
+	}
+
 	async setCache(
 		key: string,
 		value: unknown,
