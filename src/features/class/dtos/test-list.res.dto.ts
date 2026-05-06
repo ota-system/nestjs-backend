@@ -24,6 +24,9 @@ export class TestSummaryDto {
 
 	@Expose()
 	createdAt!: Date;
+
+	@Expose()
+	hasAttempted!: boolean;
 }
 
 export class TestListResponseDto {

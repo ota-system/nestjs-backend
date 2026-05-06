@@ -6,7 +6,9 @@ import { StudentClassEntity } from "../../database/entities/student-class.entity
 import { TestEntity } from "../../database/entities/test.entity";
 import { UserEntity } from "../../database/entities/user.entity";
 import { BaseException } from "../../shared/exception/base.exception";
+import { StudentResultService } from "../../shared/services/student-result.service";
 import { UserRole } from "../../shared/types/user-role.enum";
+import { checkTimesUp } from "../../shared/utils/checkTimesUp.util";
 import { ClassWithCounts } from "./class.type";
 import { CreateClassDto } from "./dtos/create-class.dto";
 import { AlreadyJoinedException } from "./exceptions/already-joined.exception";
@@ -22,6 +24,7 @@ export class ClassService {
 		private readonly testRepository: Repository<TestEntity>,
 		@InjectRepository(UserEntity)
 		private readonly userRepository: Repository<UserEntity>,
+		private readonly studentResultService: StudentResultService,
 	) {}
 
 	async createClass(dto: CreateClassDto) {
@@ -129,6 +132,13 @@ export class ClassService {
 			order: { createdAt: "DESC" },
 		});
 
+		const testIds = tests.map((t) => t.id);
+		const attemptedTestIds =
+			await this.studentResultService.getStudentAttemptedTests(
+				studentId,
+				testIds,
+			);
+
 		return tests.map((test) => ({
 			id: test.id,
 			testName: test.testName,
@@ -138,46 +148,9 @@ export class ClassService {
 			antiCheating: test.antiCheating,
 			topic: test.topic.topicName,
 			createdAt: test.createdAt,
+			hasAttempted: attemptedTestIds.has(test.id),
+			timesUp: checkTimesUp(test.startedTime, test.duration),
 		}));
-	}
-
-	async getTestDetail({
-		testId,
-		studentId,
-	}: {
-		testId: string;
-		studentId: string;
-	}) {
-		const test = await this.testRepository.findOne({
-			where: { id: testId },
-			relations: ["topic", "class"],
-		});
-
-		if (!test) {
-			throw new BaseException(404, "EXAM_NOT_FOUND");
-		}
-
-		const enrollment = await this.studentClassRepository.findOne({
-			where: {
-				student: { id: studentId },
-				class: { id: test.class.id },
-			},
-		});
-
-		if (!enrollment) {
-			throw new BaseException(403, "CLASS_ACCESS_DENIED");
-		}
-
-		return {
-			id: test.id,
-			testName: test.testName,
-			startedTime: test.startedTime,
-			duration: test.duration,
-			totalQuestions: test.totalQuestions,
-			antiCheating: test.antiCheating,
-			topic: test.topic.topicName,
-			createdAt: test.createdAt,
-		};
 	}
 
 	async addStudentToClass(

@@ -10,7 +10,9 @@ import { StudentResultEntity } from "../../database/entities/student-result.enti
 import { TestEntity } from "../../database/entities/test.entity";
 import { UUID_REGEX } from "../../shared/constants/uuid.constant";
 import { BaseException } from "../../shared/exception/base.exception";
+import { StudentResultService } from "../../shared/services/student-result.service";
 import { UserRole } from "../../shared/types/user-role.enum";
+import { checkTimesUp } from "../../shared/utils/checkTimesUp.util";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { SubmitTestAnswer } from "./type";
 import { batchLoad } from "./utils/batch-load.util";
@@ -37,29 +39,24 @@ export class TestService {
 
 		@InjectRepository(StudentClassEntity)
 		private readonly studentClassRepository: Repository<StudentClassEntity>,
+
+		private readonly studentResultService: StudentResultService,
 	) {}
 
 	async validateTestAccess(test: TestEntity, userId: string, role: UserRole) {
 		const now = new Date();
 
-		if (now < test.startedTime) {
-			throw new BaseException(403, "TEST_NOT_STARTED");
-		}
-
-		const endTime = new Date(
-			test.startedTime.getTime() + test.duration * 60 * 1000,
-		);
-		if (now > endTime) {
-			throw new BaseException(403, "TEST_ENDED");
-		}
-
 		const hasAccess = await this.checkAccess(test.class.id, userId, role);
 		if (!hasAccess) {
 			throw new BaseException(403, "TEST_ACCESS_DENIED");
 		}
+
+		if (role === UserRole.STUDENT) {
+			await this.validateTestTiming(test, now);
+		}
 	}
 
-	async getExam(testId: string, userId: string, role: UserRole) {
+	async getTestInfo(testId: string, userId: string, role: UserRole) {
 		if (!UUID_REGEX.test(testId)) {
 			console.warn(`Invalid testId format: ${testId}`);
 			throw new BaseException(404, "TEST_NOT_FOUND");
@@ -76,6 +73,54 @@ export class TestService {
 		await this.validateTestAccess(test, userId, role);
 
 		return test;
+	}
+
+	async getDetailedTestInfo({
+		testId,
+		studentId,
+	}: {
+		testId: string;
+		studentId: string;
+	}) {
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: ["topic", "class"],
+		});
+
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+
+		const enrollment = await this.studentClassRepository.findOne({
+			where: {
+				student: { id: studentId },
+				class: { id: test.class.id },
+			},
+		});
+
+		if (!enrollment) {
+			throw new BaseException(403, "CLASS_ACCESS_DENIED");
+		}
+
+		const testIds = [test.id];
+
+		const attemptedTestIds =
+			await this.studentResultService.getStudentAttemptedTests(
+				studentId,
+				testIds,
+			);
+
+		return {
+			id: test.id,
+			testName: test.testName,
+			startedTime: test.startedTime,
+			duration: test.duration,
+			totalQuestions: test.totalQuestions,
+			antiCheating: test.antiCheating,
+			topic: test.topic.topicName,
+			createdAt: test.createdAt,
+			hasAttempted: attemptedTestIds.has(test.id),
+		};
 	}
 
 	async submitTest({
@@ -172,5 +217,15 @@ export class TestService {
 		}
 
 		return false;
+	}
+
+	private async validateTestTiming(test: TestEntity, now: Date) {
+		if (now < test.startedTime) {
+			throw new BaseException(403, "TEST_NOT_STARTED");
+		}
+
+		if (checkTimesUp(test.startedTime, test.duration)) {
+			throw new BaseException(403, "TEST_ENDED");
+		}
 	}
 }

@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import {
+	Body,
+	Controller,
+	Get,
+	Param,
+	ParseBoolPipe,
+	Post,
+	Query,
+} from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
@@ -39,13 +47,28 @@ export class TestController {
 	}
 
 	@Get(":testId")
-	@Auth(UserRole.TEACHER, UserRole.STUDENT)
-	async getExamInfo(
+	@Auth(UserRole.STUDENT, UserRole.TEACHER)
+	async getTestInfo(
 		@I18n() i18n: I18nContext,
 		@Param("testId") testId: string,
+		@Query("detailed", ParseBoolPipe) detailed: boolean,
 		@User() user: JwtPayload,
 	) {
-		const test = await this.testService.getExam(testId, user.sub, user.role);
+		if (detailed) {
+			const test = await this.testService.getDetailedTestInfo({
+				testId,
+				studentId: user.sub,
+			});
+			return BaseResponse.ok(
+				test,
+				await i18n.t("test.GET_EXAM_DETAIL_SUCCESS"),
+			);
+		}
+		const test = await this.testService.getTestInfo(
+			testId,
+			user.sub,
+			user.role,
+		);
 		return BaseResponse.ok(
 			plainToInstance(ExamResponseDto, test, { excludeExtraneousValues: true }),
 			i18n.t("test.GET_EXAM_SUCCESS"),
@@ -60,7 +83,11 @@ export class TestController {
 		@Query() query: PageParams,
 		@User() user: JwtPayload,
 	) {
-		const test = await this.testService.getExam(testId, user.sub, user.role);
+		const test = await this.testService.getTestInfo(
+			testId,
+			user.sub,
+			user.role,
+		);
 
 		const response = await this.questionService.getQuestionsForTest(
 			test,
