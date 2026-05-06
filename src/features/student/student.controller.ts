@@ -23,7 +23,7 @@ export class StudentController {
 
 	@Get(":studentId/overall-results")
 	@UseGuards(CurrentStudent)
-	@Auth(UserRole.STUDENT, UserRole.TEACHER)
+	@Auth(UserRole.STUDENT)
 	async getOverallTestResultByStudentId(
 		@Param("studentId") studentId: string,
 		@I18n() i18n: I18nContext,

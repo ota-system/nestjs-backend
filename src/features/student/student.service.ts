@@ -23,10 +23,10 @@ export class StudentService {
 				'class.name AS "className"',
 				'sr.id AS "id"',
 				'sr.score AS "score"',
-				// 'sr.time_spent AS "timeSpent', // REFACTOR: OTA-70
+				'sr.timespent AS "timeSpent"',
 				'test.startedTime AS "testDate"',
-				// 'sr.fraudCount AS "fraudCount"', // REFACTOR: OTA-70
-				// 'sr.correctRate AS "correctRate"', // REFACTOR: OTA-70
+				// 'sr.fraudCount AS "fraudCount"', //REFACTOR:OTA-70
+				'sr.correctRate AS "correctRate"',
 			])
 			.where("sr.student_id = :studentId", { studentId })
 			.getRawMany();
