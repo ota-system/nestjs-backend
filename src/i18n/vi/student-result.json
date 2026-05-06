@@ -1,4 +1,5 @@
 {
 	"GET_RESULT_LIST_SUCCESS": "Lấy kết quả các bài thi thành công",
-	"GET_RESULT_INFO_SUCCESS": "Lấy thông tin kết quả bài thi thành công"
+	"GET_RESULT_INFO_SUCCESS": "Lấy thông tin kết quả bài thi thành công",
+	"GET_QUESTION_DETAIL_SUCCESS": "Lấy chi tiết kết quả câu hỏi thành công"
 }

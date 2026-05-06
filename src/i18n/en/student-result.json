@@ -1,4 +1,5 @@
 {
 	"GET_RESULT_LIST_SUCCESS": "Get result list successful",
-	"GET_RESULT_INFO_SUCCESS": "Get overall test result info"
+	"GET_RESULT_INFO_SUCCESS": "Get overall test result info",
+	"GET_QUESTION_DETAIL_SUCCESS": "Get detailed question result successful"
 }

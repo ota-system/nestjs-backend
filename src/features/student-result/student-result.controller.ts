@@ -28,4 +28,22 @@ export class StudentResultController {
 			i18n.t("student-result.GET_RESULT_INFO_SUCCESS"),
 		);
 	}
+
+	@Get(":id/questions/:questionId")
+	@Auth(UserRole.STUDENT, UserRole.TEACHER)
+	async getQuestionDetail(
+		@I18n() i18n: I18nContext,
+		@Param() params: { id: string; questionId: string },
+		@User() user: AccessJwtPayload,
+	) {
+		const data = await this.studentResultService.getQuestionDetail(
+			params.id,
+			params.questionId,
+			user,
+		);
+		return BaseResponse.ok(
+			data,
+			i18n.t("student-result.GET_QUESTION_DETAIL_SUCCESS"),
+		);
+	}
 }
