@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import {
+	Body,
+	Controller,
+	Get,
+	Param,
+	ParseBoolPipe,
+	Post,
+	Query,
+} from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
@@ -39,14 +47,14 @@ export class TestController {
 	}
 
 	@Get(":testId")
-	@Auth(UserRole.STUDENT)
+	@Auth(UserRole.STUDENT, UserRole.TEACHER)
 	async getTestInfo(
 		@I18n() i18n: I18nContext,
 		@Param("testId") testId: string,
-		@Query() query: { detailed?: boolean },
+		@Query("detailed", ParseBoolPipe) detailed: boolean,
 		@User() user: JwtPayload,
 	) {
-		if (query.detailed) {
+		if (detailed) {
 			const test = await this.testService.getDetailedTestInfo({
 				testId,
 				studentId: user.sub,

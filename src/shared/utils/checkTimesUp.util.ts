@@ -1,8 +1,7 @@
 export const checkTimesUp = (
-	createdAt: Date,
+	startedAt: Date,
 	durationMinutes: number,
 ): boolean => {
-	const endTime = new Date(createdAt.getTime() + durationMinutes * 60 * 1000);
-	const timeoutSeconds = Math.floor((endTime.getTime() - Date.now()) / 1000);
-	return timeoutSeconds <= 0;
+	const endTime = new Date(startedAt.getTime() + durationMinutes * 60 * 1000);
+	return endTime.getTime() <= Date.now();
 };

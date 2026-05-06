@@ -3,7 +3,6 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ClassEntity } from "../../database/entities/class.entity";
 import { StudentClassEntity } from "../../database/entities/student-class.entity";
-import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { TestEntity } from "../../database/entities/test.entity";
 import { UserEntity } from "../../database/entities/user.entity";
 import { BaseException } from "../../shared/exception/base.exception";
@@ -21,8 +20,6 @@ export class ClassService {
 		private readonly classRepository: Repository<ClassEntity>,
 		@InjectRepository(StudentClassEntity)
 		private readonly studentClassRepository: Repository<StudentClassEntity>,
-		@InjectRepository(StudentResultEntity)
-		private readonly studentResultRepository: Repository<StudentResultEntity>,
 		@InjectRepository(TestEntity)
 		private readonly testRepository: Repository<TestEntity>,
 		@InjectRepository(UserEntity)
