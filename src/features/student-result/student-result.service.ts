@@ -1,6 +1,5 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { plainToInstance } from "class-transformer";
 import { Repository } from "typeorm";
 import { QuestionEntity } from "../../database/entities/question.entity";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
@@ -8,10 +7,6 @@ import { AccessForbiddenException } from "../../shared/exception/access-forbidde
 import { BaseException } from "../../shared/exception/base.exception";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { AccessJwtPayload } from "../auth/auth.type";
-import {
-	QuestionDetailResponse,
-	StudentResultResponse,
-} from "./dtos/student-result-res.dto";
 
 @Injectable()
 export class StudentResultService {
@@ -45,7 +40,7 @@ export class StudentResultService {
 			result.studentAnswers.map((a) => [a.questionId, a.isCorrect]),
 		);
 
-		const plainData = {
+		return {
 			testResultInfo: {
 				testResultId: result.id,
 				testName: result.exam.testName,
@@ -62,10 +57,6 @@ export class StudentResultService {
 					isCorrect: answerMap.get(q.id) ?? null,
 				})) || [],
 		};
-
-		return plainToInstance(StudentResultResponse, plainData, {
-			excludeExtraneousValues: true,
-		});
 	}
 
 	private async validateAccess(
@@ -106,25 +97,21 @@ export class StudentResultService {
 			(a) => a.questionId === questionId,
 		);
 
-		return plainToInstance(
-			QuestionDetailResponse,
-			{
-				id: question.id,
-				question: question.question,
-				type: question.type,
-				choices:
-					question.choices?.map((c) => ({
-						id: c.id,
-						choice: c.answer,
-						isCorrect: c.isCorrect,
-					})) ?? [],
-				answer: question.answer ?? null,
-				explaination: question.explanation ?? null,
-				studentOptionId: studentAnswer?.optionId ?? null,
-				studentAnswer: studentAnswer?.answer ?? null,
-				isCorrect: studentAnswer?.isCorrect ?? null,
-			},
-			{ excludeExtraneousValues: true },
-		);
+		return {
+			id: question.id,
+			question: question.question,
+			type: question.type,
+			choices:
+				question.choices?.map((c) => ({
+					id: c.id,
+					choice: c.answer,
+					isCorrect: c.isCorrect,
+				})) ?? [],
+			answer: question.answer ?? null,
+			explaination: question.explanation ?? null,
+			studentOptionId: studentAnswer?.optionId ?? null,
+			studentAnswer: studentAnswer?.answer ?? null,
+			isCorrect: studentAnswer?.isCorrect ?? null,
+		};
 	}
 }

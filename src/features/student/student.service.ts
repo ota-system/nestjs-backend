@@ -1,10 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { plainToInstance } from "class-transformer";
 import { Repository } from "typeorm";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
-import { OverallResultResponseDto } from "./dtos/overall-results-res.dto";
-import { TestResultResponseDto } from "./dtos/test-result-res.dto";
 
 @Injectable()
 export class StudentService {
@@ -14,7 +11,7 @@ export class StudentService {
 	) {}
 
 	async getStudentResults(studentId: string) {
-		const data = await this.studentResultRepository
+		return this.studentResultRepository
 			.createQueryBuilder("sr")
 			.leftJoin("sr.exam", "test")
 			.leftJoin("test.class", "class")
@@ -30,14 +27,10 @@ export class StudentService {
 			])
 			.where("sr.student_id = :studentId", { studentId })
 			.getRawMany();
-
-		return plainToInstance(TestResultResponseDto, data, {
-			excludeExtraneousValues: true,
-		});
 	}
 
 	async getOverallTestResult(studentId: string) {
-		const result = await this.studentResultRepository
+		return this.studentResultRepository
 			.createQueryBuilder("r")
 			.select("COUNT(r.id)", "totalTests")
 			.addSelect("AVG(r.score)", "averageScore")
@@ -45,9 +38,5 @@ export class StudentService {
 			.addSelect("MIN(r.score)", "lowestScore")
 			.where("r.student_id = :studentId", { studentId })
 			.getRawOne();
-
-		return plainToInstance(OverallResultResponseDto, result, {
-			excludeExtraneousValues: true,
-		});
 	}
 }
