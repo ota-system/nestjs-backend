@@ -18,10 +18,12 @@ import { PageParams } from "../../shared/types/page-param.type";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { TestQuestionDto } from "../question/dtos/question-res.dto";
 import { QuestionService } from "../question/question.service";
+import { FraudDetectionRequestDto } from "./dtos/fraud-detection.req.dto";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { SubmitTestResponseDto } from "./dtos/submit-test.res.dto";
 import { ExamResponseDto } from "./dtos/tesst-res.dto";
 import { TestService } from "./test.service";
+import { FraudType } from "./type";
 
 @ApiBearerAuth()
 @Controller({ path: "tests", version: "1" })
@@ -105,5 +107,32 @@ export class TestController {
 				totalPages: Math.ceil(response.totalQuestions / query.limit),
 			},
 		);
+	}
+
+	@Post(":testId/fraud-reports")
+	@Auth(UserRole.STUDENT)
+	async storeFraudDetectionResult(
+		@Param("testId") testId: string,
+		@User() user: JwtPayload,
+		@Body() fraud: FraudDetectionRequestDto,
+		@I18n() i18n: I18nContext,
+	) {
+		await this.testService.storeFraudDetectionResult(
+			testId,
+			user.sub,
+			user.role,
+			fraud,
+		);
+		if (fraud.fraudType === FraudType.VISIBILITY_CHANGE) {
+			return BaseResponse.ok(
+				null,
+				await i18n.t("test.WINDOW_VISIBILITY_CHANGED"),
+			);
+		} else if (fraud.fraudType === FraudType.FULLSCREEN_EXIT) {
+			return BaseResponse.ok(
+				null,
+				await i18n.t("test.FULLSCREEN_EXIT_DETECTED"),
+			);
+		}
 	}
 }
