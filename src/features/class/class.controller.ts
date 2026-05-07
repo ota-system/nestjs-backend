@@ -12,6 +12,7 @@ import { UserRole } from "../../shared/types/user-role.enum";
 import { ClassService } from "./class.service";
 import { ClassResponseDto, UserSummaryDto } from "./dtos/class-res.dto";
 import { CreateClassRequestDto } from "./dtos/create-class-req.dto";
+import { TestWithStatsResponseDto } from "./dtos/test-stats-res.dto";
 
 @ApiBearerAuth()
 @Controller({ path: "classes", version: "1" })
@@ -69,12 +70,25 @@ export class ClassController {
 	}
 
 	@Get(":classId/tests")
-	@Auth(UserRole.STUDENT)
+	@Auth(UserRole.STUDENT, UserRole.TEACHER)
 	async getTestsByClass(
 		@I18n() i18n: I18nContext,
 		@Param("classId") classId: string,
 		@User() user: JwtPayload,
 	) {
+		if (user.role === UserRole.TEACHER) {
+			const tests = await this.classService.getTestsWithStatsByClass(
+				classId,
+				user.sub,
+			);
+			return BaseResponse.ok(
+				plainToInstance(TestWithStatsResponseDto, tests, {
+					excludeExtraneousValues: true,
+				}),
+				await i18n.t("test.GET_EXAM_LIST_SUCCESS"),
+			);
+		}
+
 		const tests = await this.classService.getTestsByClass({
 			classId,
 			studentId: user.sub,

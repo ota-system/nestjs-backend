@@ -29,5 +29,8 @@
 	"TEST_NOT_FOUND": "Test not found.",
 	"TEST_NOT_STARTED": "This test has not started yet.",
 	"TEST_ENDED": "This test has already ended.",
-	"TEST_ACCESS_DENIED": "You do not have permission to access this test."
+	"TEST_ACCESS_DENIED": "You do not have permission to access this test.",
+	"RESOURCE_ACCESS_DENIED": "You don't have permission to access this resource.",
+	"STUDENT_RESULT_NOT_FOUND": "Student result not found.",
+	"QUESTION_NOT_FOUND": "Question not found."
 }
