@@ -5,5 +5,7 @@
 	"GET_EXAM_LIST_SUCCESS": "Lấy danh sách bài thi thành công",
 	"GET_EXAM_DETAIL_SUCCESS": "Lấy chi tiết bài thi thành công",
 	"GET_EXAM_SUCCESS": "Lấy chi tiết bài thi thành công",
-	"GET_QUESTIONS_SUCCESS": "Lấy câu hỏi bài thi thành công"
+	"GET_QUESTIONS_SUCCESS": "Lấy câu hỏi bài thi thành công",
+	"WINDOW_VISIBILITY_CHANGED": "Hệ thống phát hiện bạn đã chuyển sang tab khác hoặc tối thiểu cửa sổ",
+	"FULLSCREEN_EXIT_DETECTED": "Hệ thống phát hiện bạn đã thoát chế độ toàn màn hình"
 }

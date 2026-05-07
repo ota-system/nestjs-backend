@@ -52,6 +52,6 @@ export class StudentResultEntity extends BaseEntity {
 	@Column({ type: "json", nullable: true })
 	fraud?: Array<{
 		type: string;
-		detail: string;
+		times: number;
 	}>;
 }
