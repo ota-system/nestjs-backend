@@ -225,9 +225,10 @@ export class ClassService {
 
 		const tests = await this.testRepository
 			.createQueryBuilder("test")
+			.leftJoin("test.class", "classroom")
 			.leftJoin("test.topic", "topic")
 			.leftJoin("test.studentResults", "sr")
-			.where("test.class.id = :classId", { classId })
+			.where("classroom.id = :classId", { classId })
 			.select("test.id", "id")
 			.addSelect("test.testName", "testName")
 			.addSelect("test.duration", "duration")

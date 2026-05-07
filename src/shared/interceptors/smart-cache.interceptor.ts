@@ -49,7 +49,8 @@ export class UniversalSmartCacheInterceptor implements NestInterceptor {
 
 		if (!id) return next.handle();
 
-		const cacheKey = `${options.keyPrefix}:${id}`;
+		const userId = request.user?.sub || request.user?.id;
+		const cacheKey = `${options.keyPrefix}:${userId}:${id}`;
 
 		const cached = await this.redisService.getCache(cacheKey, z.any());
 		if (cached !== null) {
@@ -60,10 +61,16 @@ export class UniversalSmartCacheInterceptor implements NestInterceptor {
 		this.logger.debug(`[Cache MISS] ${cacheKey}`);
 
 		return next.handle().pipe(
-			tap(async (data) => {
+			tap((data) => {
 				const ttl = options.ttlSeconds ?? 60;
-				await this.redisService.setCache(cacheKey, data, ttl);
-				this.logger.debug(`[Cache SET] ${cacheKey} (TTL: ${ttl}s)`);
+				this.redisService
+					.setCache(cacheKey, data, ttl)
+					.then(() => {
+						this.logger.debug(`[Cache SET] ${cacheKey} (TTL: ${ttl}s)`);
+					})
+					.catch((err) => {
+						this.logger.error(`Failed to set cache for ${cacheKey}`, err);
+					});
 			}),
 		);
 	}

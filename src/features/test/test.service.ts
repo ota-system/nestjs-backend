@@ -199,7 +199,8 @@ export class TestService {
 		};
 	}
 
-	async getSummary(testId: string) {
+	async getSummary(testId: string, userId: string, role: UserRole) {
+		await this.assertCanAccessTest(testId, userId, role);
 		const result = await this.studentResultRepository
 			.createQueryBuilder("result")
 			.where("result.exam_id = :testId", { testId })
@@ -219,9 +220,12 @@ export class TestService {
 
 	async getStudentTestListResult(
 		testId: string,
+		userId: string,
+		role: UserRole,
 		page: number = 1,
 		limit: number = 10,
 	) {
+		await this.assertCanAccessTest(testId, userId, role);
 		const [results, total] = await this.studentResultRepository.findAndCount({
 			where: { exam: { id: testId } },
 			relations: ["student", "exam"],
@@ -261,7 +265,7 @@ export class TestService {
 
 		return {
 			data,
-			meta: {
+			metadata: {
 				total,
 				page: Number(page),
 				limit: Number(limit),
@@ -296,6 +300,27 @@ export class TestService {
 
 		if (checkTimesUp(test.startedTime, test.duration)) {
 			throw new BaseException(403, "TEST_ENDED");
+		}
+	}
+	private async assertCanAccessTest(
+		testId: string,
+		userId: string,
+		role: UserRole,
+	): Promise<void> {
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: { class: true },
+			select: {
+				id: true,
+				class: { id: true },
+			},
+		});
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+		const hasAccess = await this.checkAccess(test.class.id, userId, role);
+		if (!hasAccess) {
+			throw new BaseException(403, "TEST_ACCESS_DENIED");
 		}
 	}
 }

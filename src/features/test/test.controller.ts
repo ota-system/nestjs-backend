@@ -99,7 +99,6 @@ export class TestController {
 			user.sub,
 			user.role,
 		);
-
 		const response = await this.questionService.getQuestionsForTest(
 			test,
 			query.page,
@@ -125,8 +124,11 @@ export class TestController {
 		@Param("testId") testId: string,
 		@User() user: JwtPayload,
 	) {
-		await this.testService.getTestInfo(testId, user.sub, user.role); // Verify access
-		const summary = await this.testService.getSummary(testId);
+		const summary = await this.testService.getSummary(
+			testId,
+			user.sub,
+			user.role,
+		);
 		return BaseResponse.ok(
 			summary,
 			await i18n.t("test.GET_SUMMARY_SUCCESS", {
@@ -150,17 +152,19 @@ export class TestController {
 		@Query() query: PageParams,
 		@User() user: JwtPayload,
 	) {
-		await this.testService.getTestInfo(testId, user.sub, user.role); // Verify access
 		const result = await this.testService.getStudentTestListResult(
 			testId,
+			user.sub,
+			user.role,
 			query.page,
 			query.limit,
 		);
 		return BaseResponse.ok(
-			result,
+			result.data,
 			await i18n.t("test.GET_STUDENTS_SUCCESS", {
 				defaultValue: "Lấy danh sách thí sinh thành công",
 			}),
+			result.metadata,
 		);
 	}
 }
