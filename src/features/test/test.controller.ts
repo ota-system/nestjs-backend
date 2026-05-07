@@ -6,6 +6,7 @@ import {
 	ParseBoolPipe,
 	Post,
 	Query,
+	UseInterceptors,
 } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
@@ -13,6 +14,12 @@ import { I18n, I18nContext } from "nestjs-i18n";
 import { Auth } from "../../shared/decorators/auth.decorator";
 import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
+import {
+	InvalidateCache,
+	SmartCache,
+	UniversalInvalidateCacheInterceptor,
+	UniversalSmartCacheInterceptor,
+} from "../../shared/interceptors/smart-cache.interceptor";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { PageParams } from "../../shared/types/page-param.type";
 import { UserRole } from "../../shared/types/user-role.enum";
@@ -34,6 +41,10 @@ export class TestController {
 	@Post("/submit")
 	@Auth(UserRole.STUDENT)
 	@ApiBearerAuth()
+	@InvalidateCache([
+		{ keyPrefix: "test_students", target: "body", targetField: "testId" },
+	])
+	@UseInterceptors(UniversalInvalidateCacheInterceptor)
 	async submit(
 		@Body() dto: SubmitTestRequestDto,
 		@User() user: JwtPayload,
@@ -88,7 +99,6 @@ export class TestController {
 			user.sub,
 			user.role,
 		);
-
 		const response = await this.questionService.getQuestionsForTest(
 			test,
 			query.page,
@@ -104,6 +114,57 @@ export class TestController {
 				limit: query.limit,
 				totalPages: Math.ceil(response.totalQuestions / query.limit),
 			},
+		);
+	}
+
+	@Get(":testId/summary")
+	@Auth(UserRole.TEACHER)
+	async getTestSummary(
+		@I18n() i18n: I18nContext,
+		@Param("testId") testId: string,
+		@User() user: JwtPayload,
+	) {
+		const summary = await this.testService.getSummary(
+			testId,
+			user.sub,
+			user.role,
+		);
+		return BaseResponse.ok(
+			summary,
+			await i18n.t("test.GET_SUMMARY_SUCCESS", {
+				defaultValue: "Lấy thống kê bài thi thành công",
+			}),
+		);
+	}
+
+	@Get(":testId/students")
+	@Auth(UserRole.TEACHER)
+	@SmartCache({
+		keyPrefix: "test_students",
+		target: "params",
+		targetField: "testId",
+		ttlSeconds: 60,
+	})
+	@UseInterceptors(UniversalSmartCacheInterceptor)
+	async getTestStudents(
+		@I18n() i18n: I18nContext,
+		@Param("testId") testId: string,
+		@Query() query: PageParams,
+		@User() user: JwtPayload,
+	) {
+		const result = await this.testService.getStudentTestListResult(
+			testId,
+			user.sub,
+			user.role,
+			query.page,
+			query.limit,
+		);
+		return BaseResponse.ok(
+			result.data,
+			await i18n.t("test.GET_STUDENTS_SUCCESS", {
+				defaultValue: "Lấy danh sách thí sinh thành công",
+			}),
+			result.metadata,
 		);
 	}
 }

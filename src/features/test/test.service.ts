@@ -199,6 +199,80 @@ export class TestService {
 		};
 	}
 
+	async getSummary(testId: string, userId: string, role: UserRole) {
+		await this.assertCanAccessTest(testId, userId, role);
+		const result = await this.studentResultRepository
+			.createQueryBuilder("result")
+			.where("result.exam_id = :testId", { testId })
+			.select("COUNT(result.id)", "totalStudents")
+			.addSelect("AVG(result.score)", "averageScore")
+			.addSelect("MAX(result.score)", "highestScore")
+			.addSelect("MIN(result.score)", "lowestScore")
+			.getRawOne();
+
+		return {
+			totalStudents: Number(result.totalStudents) || 0,
+			averageScore: Math.round((Number(result.averageScore) || 0) * 10) / 10,
+			highestScore: Number(result.highestScore) || 0,
+			lowestScore: Number(result.lowestScore) || 0,
+		};
+	}
+
+	async getStudentTestListResult(
+		testId: string,
+		userId: string,
+		role: UserRole,
+		page: number = 1,
+		limit: number = 10,
+	) {
+		await this.assertCanAccessTest(testId, userId, role);
+		const [results, total] = await this.studentResultRepository.findAndCount({
+			where: { exam: { id: testId } },
+			relations: ["student", "exam"],
+			skip: (page - 1) * limit,
+			take: limit,
+			order: { createdAt: "DESC" },
+		});
+
+		const data = results.map((result) => {
+			let violations = 0;
+			if (Array.isArray(result.mistakes)) {
+				violations = result.mistakes.length;
+			} else if (result.mistakes) {
+				violations = Object.keys(result.mistakes as object).length;
+			}
+
+			let durationMinutes = 0;
+			if (result.exam?.startedTime && result.createdAt) {
+				const diffMs =
+					result.createdAt.getTime() - result.exam.startedTime.getTime();
+				durationMinutes = Math.max(0, Math.floor(diffMs / 60000));
+			}
+
+			const maxScore = 10;
+
+			return {
+				id: result.id, // Included for React key
+				studentName: result.student?.fullName || "Unknown",
+				violations,
+				score: result.score,
+				totalScore: maxScore,
+				percentage: result.correctRate,
+				durationMinutes,
+				submittedAt: result.createdAt.toISOString().split("T")[0],
+			};
+		});
+
+		return {
+			data,
+			metadata: {
+				total,
+				page: Number(page),
+				limit: Number(limit),
+			},
+		};
+	}
+
 	private async checkAccess(
 		classId: string,
 		userId: string,
@@ -226,6 +300,27 @@ export class TestService {
 
 		if (checkTimesUp(test.startedTime, test.duration)) {
 			throw new BaseException(403, "TEST_ENDED");
+		}
+	}
+	private async assertCanAccessTest(
+		testId: string,
+		userId: string,
+		role: UserRole,
+	): Promise<void> {
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: { class: true },
+			select: {
+				id: true,
+				class: { id: true },
+			},
+		});
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+		const hasAccess = await this.checkAccess(test.class.id, userId, role);
+		if (!hasAccess) {
+			throw new BaseException(403, "TEST_ACCESS_DENIED");
 		}
 	}
 }
