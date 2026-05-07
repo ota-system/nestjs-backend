@@ -59,10 +59,7 @@ export class StudentResultService {
 		};
 	}
 
-	private async validateAccess(
-		user: AccessJwtPayload,
-		result: StudentResultEntity,
-	) {
+	private validateAccess(user: AccessJwtPayload, result: StudentResultEntity) {
 		const isCurrentUser =
 			user.role === UserRole.STUDENT && result.student.id === user.sub;
 		const isTeacherOfResult =
@@ -108,7 +105,7 @@ export class StudentResultService {
 					isCorrect: c.isCorrect,
 				})) ?? [],
 			answer: question.answer ?? null,
-			explaination: question.explanation ?? null,
+			explanation: question.explanation ?? null,
 			studentOptionId: studentAnswer?.optionId ?? null,
 			studentAnswer: studentAnswer?.answer ?? null,
 			isCorrect: studentAnswer?.isCorrect ?? null,

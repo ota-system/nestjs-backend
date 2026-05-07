@@ -29,7 +29,7 @@ export class QuestionDetailResponse {
 	answer!: string | null;
 
 	@Expose()
-	explaination!: string | null;
+	explanation!: string | null;
 
 	@Expose()
 	studentOptionId!: string | null;

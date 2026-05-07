@@ -25,7 +25,7 @@ export class StudentController {
 			plainToInstance(TestResultResponseDto, data, {
 				excludeExtraneousValues: true,
 			}),
-			i18n.t("student.GET_RESULT_LIST_SUCCESS"),
+			i18n.t("student-result.GET_RESULT_LIST_SUCCESS"),
 		);
 	}
 
@@ -41,7 +41,7 @@ export class StudentController {
 			plainToInstance(OverallResultResponseDto, data, {
 				excludeExtraneousValues: true,
 			}),
-			i18n.t("student.GET_OVERALL_RESULT_SUCCESS"),
+			i18n.t("student-result.GET_OVERALL_RESULT_SUCCESS"),
 		);
 	}
 }
