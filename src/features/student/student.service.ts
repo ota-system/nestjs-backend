@@ -22,7 +22,7 @@ export class StudentService {
 				'sr.score AS "score"',
 				'sr.timespent AS "timeSpent"',
 				'test.startedTime AS "testDate"',
-				// 'sr.fraudCount AS "fraudCount"', //REFACTOR:OTA-70
+				'COALESCE(json_array_length(sr.fraud::json), 0) AS "fraudCount"', //REFACTOR:OTA-70
 				'sr.correctRate AS "correctRate"',
 			])
 			.where("sr.student_id = :studentId", { studentId })

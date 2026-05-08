@@ -14,7 +14,7 @@ import { RedisService } from "../../shared/redis/redis.service";
 import { StudentResultService } from "../../shared/services/student-result.service";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { checkTimesUp } from "../../shared/utils/checkTimesUp.util";
-import { FraudDetectionRequestDto } from "./dtos/fraud-detection.req.dto";
+import { CreateTestFraudReqDto } from "./dtos/create-test-fraud.req.dto";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { FraudDetectionSchema } from "./schema/fraud.schema";
 import { FraudDetectionCache, SubmitTestAnswer } from "./type";
@@ -341,11 +341,11 @@ export class TestService {
 		}
 	}
 
-	async storeFraudDetectionResult(
+	async storeTestFraudResult(
 		testId: string,
 		studentId: string,
 		role: UserRole,
-		fraud: FraudDetectionRequestDto,
+		fraud: CreateTestFraudReqDto,
 	) {
 		const test = await this.testRepository.findOne({
 			where: { id: testId },

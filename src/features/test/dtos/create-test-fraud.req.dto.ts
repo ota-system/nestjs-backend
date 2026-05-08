@@ -1,7 +1,7 @@
 import { IsString } from "class-validator";
 import { FraudType } from "../type";
 
-export class FraudDetectionRequestDto {
+export class CreateTestFraudReqDto {
 	@IsString()
 	fraudType!: FraudType;
 }

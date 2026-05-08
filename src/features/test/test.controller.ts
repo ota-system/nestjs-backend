@@ -25,7 +25,7 @@ import { PageParams } from "../../shared/types/page-param.type";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { TestQuestionDto } from "../question/dtos/question-res.dto";
 import { QuestionService } from "../question/question.service";
-import { FraudDetectionRequestDto } from "./dtos/fraud-detection.req.dto";
+import { CreateTestFraudReqDto } from "./dtos/create-test-fraud.req.dto";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { SubmitTestResponseDto } from "./dtos/submit-test.res.dto";
 import { ExamResponseDto } from "./dtos/tesst-res.dto";
@@ -172,13 +172,13 @@ export class TestController {
 
 	@Post(":testId/fraud-reports")
 	@Auth(UserRole.STUDENT)
-	async storeFraudDetectionResult(
+	async storeTestFraudResult(
 		@Param("testId") testId: string,
 		@User() user: JwtPayload,
-		@Body() fraud: FraudDetectionRequestDto,
+		@Body() fraud: CreateTestFraudReqDto,
 		@I18n() i18n: I18nContext,
 	) {
-		await this.testService.storeFraudDetectionResult(
+		await this.testService.storeTestFraudResult(
 			testId,
 			user.sub,
 			user.role,
@@ -189,11 +189,8 @@ export class TestController {
 				null,
 				await i18n.t("test.WINDOW_VISIBILITY_CHANGED"),
 			);
-		} else if (fraud.fraudType === FraudType.FULLSCREEN_EXIT) {
-			return BaseResponse.ok(
-				null,
-				await i18n.t("test.FULLSCREEN_EXIT_DETECTED"),
-			);
 		}
+
+		return BaseResponse.ok(null, await i18n.t("test.FULLSCREEN_EXIT_DETECTED"));
 	}
 }
