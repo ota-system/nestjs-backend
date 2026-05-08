@@ -97,22 +97,25 @@ export class AuthService {
 
 	// ─── Token generation ──────────────────────────────────────────────────────
 
-	public async generateTokens(user: UserEntity): Promise<AuthTokensResDto> {
-		const sessionId = randomUUID();
-		const payload = {
+	private async generateAccessToken(
+		user: UserEntity,
+		sessionId: string,
+	): Promise<string> {
+		return await this.jwtService.signAsync({
 			sub: user.id,
 			email: user.email,
 			role: user.role,
 			sid: sessionId,
-		};
+		});
+	}
 
-		const accessToken = await this.jwtService.signAsync(payload);
-
+	private async generateRefreshToken(
+		user: UserEntity,
+		sessionId: string,
+	): Promise<string> {
 		const refreshExpires = ENV_KEY.JWT_REFRESH_EXPIRES(this.configService);
-		const refreshTtlSec = ENV_KEY.JWT_REFRESH_EXPIRES_SECONDS(
-			this.configService,
-		);
-		const refreshToken = await this.jwtService.signAsync(
+
+		return await this.jwtService.signAsync(
 			{ sub: user.id, sid: sessionId },
 			{
 				secret: ENV_KEY.JWT_SECRET(this.configService),
@@ -120,6 +123,17 @@ export class AuthService {
 				expiresIn: refreshExpires as any,
 			},
 		);
+	}
+
+	public async generateTokens(
+		user: UserEntity,
+		sessionId: string = randomUUID(),
+	): Promise<AuthTokensResDto> {
+		const accessToken = await this.generateAccessToken(user, sessionId);
+		const refreshTtlSec = ENV_KEY.JWT_REFRESH_EXPIRES_SECONDS(
+			this.configService,
+		);
+		const refreshToken = await this.generateRefreshToken(user, sessionId);
 
 		await this.redisService.saveRefreshSession(
 			user.id,
@@ -129,6 +143,57 @@ export class AuthService {
 		);
 
 		return { accessToken, refreshToken };
+	}
+
+	async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
+		let refreshPayload: RefreshJwtPayload;
+
+		try {
+			refreshPayload = await this.jwtService.verifyAsync<RefreshJwtPayload>(
+				refreshToken,
+				{
+					secret: ENV_KEY.JWT_SECRET(this.configService),
+				},
+			);
+		} catch {
+			throw new BaseException(401, "INVALID_TOKEN_SESSION");
+		}
+
+		if (!refreshPayload?.sub || !refreshPayload.sid) {
+			throw new BaseException(401, "INVALID_TOKEN_SESSION");
+		}
+
+		const currentSession = await this.redisService.getRefreshSession(
+			refreshPayload.sub,
+			refreshPayload.sid,
+		);
+
+		if (
+			!currentSession ||
+			currentSession.isRevoked ||
+			currentSession.token !== refreshToken
+		) {
+			throw new BaseException(401, "INVALID_TOKEN_SESSION");
+		}
+
+		const user = await this.userRepository.findOne({
+			where: { id: refreshPayload.sub },
+		});
+
+		if (!user) {
+			throw new BaseException(404, "USER_NOT_FOUND");
+		}
+
+		if (!user.isActive) {
+			throw new BaseException(400, "ACCOUNT_NOT_VERIFIED");
+		}
+
+		const accessToken = await this.generateAccessToken(
+			user,
+			refreshPayload.sid,
+		);
+
+		return { accessToken };
 	}
 
 	// ─── Helpers ───────────────────────────────────────────────────────────────
