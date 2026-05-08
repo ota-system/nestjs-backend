@@ -11,6 +11,7 @@ import { HealthModule } from "./features/health/health.module";
 import { QuestionModule } from "./features/question/question.module";
 import { StudentModule } from "./features/student/student.module";
 import { StudentResultModule } from "./features/student-result/student-result.module";
+import { TeacherModule } from "./features/teacher/teacher.module";
 import { TestModule } from "./features/test/test.module";
 import { TestGenerationModule } from "./features/test-generation/test-generation.module";
 import { UserModule } from "./features/user/user.module";
@@ -72,6 +73,7 @@ import { SharedModule } from "./shared/shared.module";
 		QuestionModule,
 		StudentModule,
 		StudentResultModule,
+		TeacherModule,
 	],
 })
 export class AppModule {}
