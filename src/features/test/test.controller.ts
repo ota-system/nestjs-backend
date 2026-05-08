@@ -182,7 +182,7 @@ export class TestController {
 			testId,
 			user.sub,
 			user.role,
-			fraud,
+			fraud.fraudType,
 		);
 		if (fraud.fraudType === FraudType.VISIBILITY_CHANGE) {
 			return BaseResponse.ok(

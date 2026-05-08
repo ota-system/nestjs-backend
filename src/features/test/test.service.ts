@@ -14,10 +14,9 @@ import { RedisService } from "../../shared/redis/redis.service";
 import { StudentResultService } from "../../shared/services/student-result.service";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { checkTimesUp } from "../../shared/utils/checkTimesUp.util";
-import { CreateTestFraudReqDto } from "./dtos/create-test-fraud.req.dto";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
-import { FraudDetectionSchema } from "./schema/fraud.schema";
-import { FraudDetectionCache, SubmitTestAnswer } from "./type";
+import { TestFraudListSchema } from "./schema/test-fraud.schema";
+import { FraudType, SubmitTestAnswer, TestFraudCache } from "./type";
 import { batchLoad } from "./utils/batch-load.util";
 import calculateCorrectRate from "./utils/calculate-correct-rate.util";
 import calculateScore from "./utils/calculate-score.util";
@@ -192,8 +191,8 @@ export class TestService {
 
 		const fraudKey = `fraud:${testId}:${studentId}`;
 		const fraudData = await this.redisService.getCache<{
-			frauds: FraudDetectionCache[];
-		}>(fraudKey, FraudDetectionSchema);
+			frauds: TestFraudCache[];
+		}>(fraudKey, TestFraudListSchema);
 
 		const studentResult = this.studentResultRepository.create({
 			student: { id: studentId },
@@ -345,7 +344,7 @@ export class TestService {
 		testId: string,
 		studentId: string,
 		role: UserRole,
-		fraud: CreateTestFraudReqDto,
+		fraudType: FraudType,
 	) {
 		const test = await this.testRepository.findOne({
 			where: { id: testId },
@@ -360,22 +359,22 @@ export class TestService {
 		const key = `fraud:${testId}:${studentId}`;
 
 		const fraudsExisting = await this.redisService.getCache<{
-			frauds: FraudDetectionCache[];
-		}>(key, FraudDetectionSchema);
+			frauds: TestFraudCache[];
+		}>(key, TestFraudListSchema);
 
 		if (fraudsExisting) {
 			const fraudExisting = fraudsExisting.frauds.find(
-				(f) => f.type === fraud.fraudType,
+				(f) => f.type === fraudType,
 			);
 			if (fraudExisting) {
 				fraudExisting.times += 1;
 			} else {
-				fraudsExisting.frauds.push({ type: fraud.fraudType, times: 1 });
+				fraudsExisting.frauds.push({ type: fraudType, times: 1 });
 			}
 			await this.redisService.setCache(key, fraudsExisting);
 		} else {
 			await this.redisService.setCache(key, {
-				frauds: [{ type: fraud.fraudType, times: 1 }],
+				frauds: [{ type: fraudType, times: 1 }],
 			});
 		}
 		return null;

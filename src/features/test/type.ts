@@ -5,7 +5,7 @@ export type SubmitTestAnswer = {
 	isCorrect: boolean;
 };
 
-export type FraudDetectionResult = {
+export type TestFraudResult = {
 	type: FraudType;
 	times: number;
 };
@@ -15,7 +15,7 @@ export enum FraudType {
 	FULLSCREEN_EXIT = "FULLSCREEN EXIT",
 }
 
-export type FraudDetectionCache = {
+export type TestFraudCache = {
 	type: FraudType;
 	times: number;
 };
