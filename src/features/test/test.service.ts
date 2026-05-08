@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-
+import { z } from "zod";
 import { ChoiceEntity } from "../../database/entities/choice.entity";
 import { ClassEntity } from "../../database/entities/class.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
@@ -20,6 +20,7 @@ import { FraudType, SubmitTestAnswer, TestFraudCache } from "./type";
 import { batchLoad } from "./utils/batch-load.util";
 import calculateCorrectRate from "./utils/calculate-correct-rate.util";
 import calculateScore from "./utils/calculate-score.util";
+import { calculateTestTimeSpent } from "./utils/calculate-test-time-spent";
 
 @Injectable()
 export class TestService {
@@ -194,12 +195,19 @@ export class TestService {
 			frauds: TestFraudCache[];
 		}>(fraudKey, TestFraudListSchema);
 
+		const timespent = await calculateTestTimeSpent(
+			this.redisService,
+			testId,
+			studentId,
+		);
+
 		const studentResult = this.studentResultRepository.create({
 			student: { id: studentId },
 			exam: { id: testId },
 			score,
 			studentAnswers,
 			correctRate: correctRate,
+			timespent,
 			fraud: fraudData?.frauds ?? [],
 		});
 
@@ -251,30 +259,16 @@ export class TestService {
 		});
 
 		const data = results.map((result) => {
-			let violations = 0;
-			if (Array.isArray(result.mistakes)) {
-				violations = result.mistakes.length;
-			} else if (result.mistakes) {
-				violations = Object.keys(result.mistakes as object).length;
-			}
-
-			let durationMinutes = 0;
-			if (result.exam?.startedTime && result.createdAt) {
-				const diffMs =
-					result.createdAt.getTime() - result.exam.startedTime.getTime();
-				durationMinutes = Math.max(0, Math.floor(diffMs / 60000));
-			}
-
 			const maxScore = 10;
 
 			return {
 				id: result.id, // Included for React key
 				studentName: result.student?.fullName || "Unknown",
-				violations,
+				violations: result.fraud?.length || 0,
 				score: result.score,
 				totalScore: maxScore,
 				percentage: result.correctRate,
-				durationMinutes,
+				durationMinutes: result.timespent,
 				submittedAt: result.createdAt.toISOString().split("T")[0],
 			};
 		});
@@ -378,5 +372,30 @@ export class TestService {
 			});
 		}
 		return null;
+	}
+
+	async saveTestStartTimeOfStudent({
+		studentId,
+		testId,
+		startTime,
+	}: {
+		studentId: string;
+		testId: string;
+		startTime: Date;
+	}) {
+		const testStartTimeKey = `test_start_time:${testId}:${studentId}`;
+		const existingValue = await this.redisService.getCache<number>(
+			testStartTimeKey,
+			z.number(),
+		);
+		if (!existingValue) {
+			await this.redisService.setCache(
+				testStartTimeKey,
+				Date.now(),
+				startTime
+					? Math.ceil((startTime.getTime() - Date.now()) / 1000)
+					: 3600 * 24,
+			);
+		}
 	}
 }
