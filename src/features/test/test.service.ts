@@ -10,11 +10,13 @@ import { StudentResultEntity } from "../../database/entities/student-result.enti
 import { TestEntity } from "../../database/entities/test.entity";
 import { UUID_REGEX } from "../../shared/constants/uuid.constant";
 import { BaseException } from "../../shared/exception/base.exception";
+import { RedisService } from "../../shared/redis/redis.service";
 import { StudentResultService } from "../../shared/services/student-result.service";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { checkTimesUp } from "../../shared/utils/checkTimesUp.util";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
-import { SubmitTestAnswer } from "./type";
+import { TestFraudListSchema } from "./schema/test-fraud.schema";
+import { FraudType, SubmitTestAnswer, TestFraudCache } from "./type";
 import { batchLoad } from "./utils/batch-load.util";
 import calculateCorrectRate from "./utils/calculate-correct-rate.util";
 import calculateScore from "./utils/calculate-score.util";
@@ -41,6 +43,7 @@ export class TestService {
 		private readonly studentClassRepository: Repository<StudentClassEntity>,
 
 		private readonly studentResultService: StudentResultService,
+		private readonly redisService: RedisService,
 	) {}
 
 	async validateTestAccess(test: TestEntity, userId: string, role: UserRole) {
@@ -136,7 +139,12 @@ export class TestService {
 			where: { id: testId },
 			relations: { topic: true },
 		});
-		const totalQuestions = test?.totalQuestions ?? answers.length;
+
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+
+		const totalQuestions = test.totalQuestions;
 
 		const questionIds = answers.map((a) => a.questionId);
 		const questionsMap = await batchLoad(this.questionRepository, questionIds);
@@ -181,21 +189,29 @@ export class TestService {
 
 		const correctRate = calculateCorrectRate(correct, totalQuestions);
 
+		const fraudKey = `fraud:${testId}:${studentId}`;
+		const fraudData = await this.redisService.getCache<{
+			frauds: TestFraudCache[];
+		}>(fraudKey, TestFraudListSchema);
+
 		const studentResult = this.studentResultRepository.create({
 			student: { id: studentId },
 			exam: { id: testId },
 			score,
 			studentAnswers,
 			correctRate: correctRate,
+			fraud: fraudData?.frauds ?? [],
 		});
 
 		await this.studentResultRepository.save(studentResult);
+		await this.redisService.delCache(fraudKey);
 		return {
 			score,
 			correctRate: correctRate,
-			subject: test?.topic?.topicName ?? "Unknown",
+			subject: test.topic?.topicName ?? "Unknown",
 			correctQuestions: correct,
 			totalQuestions,
+			fraud: fraudData?.frauds ?? [],
 		};
 	}
 
@@ -322,5 +338,45 @@ export class TestService {
 		if (!hasAccess) {
 			throw new BaseException(403, "TEST_ACCESS_DENIED");
 		}
+	}
+
+	async storeTestFraudResult(
+		testId: string,
+		studentId: string,
+		role: UserRole,
+		fraudType: FraudType,
+	) {
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: ["class"],
+		});
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+
+		await this.validateTestAccess(test, studentId, role);
+
+		const key = `fraud:${testId}:${studentId}`;
+
+		const fraudsExisting = await this.redisService.getCache<{
+			frauds: TestFraudCache[];
+		}>(key, TestFraudListSchema);
+
+		if (fraudsExisting) {
+			const fraudExisting = fraudsExisting.frauds.find(
+				(f) => f.type === fraudType,
+			);
+			if (fraudExisting) {
+				fraudExisting.times += 1;
+			} else {
+				fraudsExisting.frauds.push({ type: fraudType, times: 1 });
+			}
+			await this.redisService.setCache(key, fraudsExisting);
+		} else {
+			await this.redisService.setCache(key, {
+				frauds: [{ type: fraudType, times: 1 }],
+			});
+		}
+		return null;
 	}
 }
