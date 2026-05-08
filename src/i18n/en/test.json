@@ -5,5 +5,7 @@
 	"GET_EXAM_LIST_SUCCESS": "Exam list retrieved successfully",
 	"GET_EXAM_DETAIL_SUCCESS": "Exam detail retrieved successfully",
 	"GET_EXAM_SUCCESS": "Get exam detail successful",
-	"GET_QUESTIONS_SUCCESS": "Get exam questions successful"
+	"GET_QUESTIONS_SUCCESS": "Get exam questions successful",
+	"WINDOW_VISIBILITY_CHANGED": "System detected that you have switched to another tab or minimized the window",
+	"FULLSCREEN_EXIT_DETECTED": "System detected that you have exited full screen mode"
 }
