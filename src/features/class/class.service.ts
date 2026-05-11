@@ -252,7 +252,7 @@ export class ClassService {
 			maxScore: 10,
 			stats: {
 				attempts: Number(t.attempts),
-				averageScore: Number(t.averageScore),
+				averageScore: Math.round((Number(t.averageScore) || 0) * 10) / 10,
 				highestScore: Number(t.highestScore),
 			},
 		}));

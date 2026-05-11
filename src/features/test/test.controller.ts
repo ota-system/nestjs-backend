@@ -101,6 +101,14 @@ export class TestController {
 			user.sub,
 			user.role,
 		);
+		if (user.role === UserRole.STUDENT) {
+			await this.testService.saveTestStartTimeOfStudent({
+				studentId: user.sub,
+				testId,
+				startTime: test.startedTime,
+			});
+		}
+
 		const response = await this.questionService.getQuestionsForTest(
 			test,
 			query.page,
