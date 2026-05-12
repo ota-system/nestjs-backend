@@ -39,4 +39,45 @@ export class StudentService {
 			.where("r.student_id = :studentId", { studentId })
 			.getRawOne();
 	}
+
+	async getClassAnalytics(studentId: string, classId: string) {
+		const manager = this.studentResultRepository.manager;
+
+		const rows: Array<{
+			testName: string;
+			myScore: number;
+			classAvgScore: number;
+			classMaxScore: number;
+			classMinScore: number;
+		}> = await manager.query(
+			`
+			SELECT
+				t.test_name       AS "testName",
+				my_sr.score       AS "myScore",
+				cs.avg_score      AS "classAvgScore",
+				cs.max_score      AS "classMaxScore",
+				cs.min_score      AS "classMinScore"
+			FROM student_results my_sr
+			INNER JOIN tests t ON t.id = my_sr.exam_id
+			INNER JOIN classes c ON c.id = t.class_id
+			INNER JOIN (
+				SELECT
+					sr2.exam_id,
+					AVG(sr2.score)::float AS avg_score,
+					MAX(sr2.score)::float AS max_score,
+					MIN(sr2.score)::float AS min_score
+				FROM student_results sr2
+				INNER JOIN tests t2 ON t2.id = sr2.exam_id
+				WHERE t2.class_id = $2
+				GROUP BY sr2.exam_id
+			) cs ON cs.exam_id = my_sr.exam_id
+			WHERE my_sr.student_id = $1
+			  AND c.id = $2
+			ORDER BY t.started_time ASC
+			`,
+			[studentId, classId],
+		);
+
+		return rows;
+	}
 }
