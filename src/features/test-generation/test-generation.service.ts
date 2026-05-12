@@ -22,6 +22,7 @@ export class TestGenerationService {
 	async saveAIGeneratedTest(dto: SavedTestRequestDto): Promise<boolean> {
 		const {
 			testName,
+			topicName,
 			classId,
 			startedTime,
 			duration,
@@ -34,7 +35,6 @@ export class TestGenerationService {
 			const testRepository = manager.getRepository(TestEntity);
 			const questionRepository = manager.getRepository(QuestionEntity);
 
-			const topicName = questions[0].topic;
 			let topic = await topicRepository.findOneBy({ topicName });
 
 			if (!topic) {
