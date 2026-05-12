@@ -6,6 +6,8 @@ import { StudentClassEntity } from "../../database/entities/student-class.entity
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { TestEntity } from "../../database/entities/test.entity";
 import { UserEntity } from "../../database/entities/user.entity";
+import { StudentClassGpaView } from "../../database/views/student-class-gpa.view";
+import { TopicAvgScoreView } from "../../database/views/topic-avg-score.view";
 import { AccessForbiddenException } from "../../shared/exception/access-forbidden.exception";
 import { BaseException } from "../../shared/exception/base.exception";
 import { StudentResultService } from "../../shared/services/student-result.service";
@@ -28,6 +30,10 @@ export class ClassService {
 		private readonly userRepository: Repository<UserEntity>,
 		@InjectRepository(StudentResultEntity)
 		private readonly studentResultRepository: Repository<StudentResultEntity>,
+		@InjectRepository(StudentClassGpaView)
+		private readonly studentClassGpaRepository: Repository<StudentClassGpaView>,
+		@InjectRepository(TopicAvgScoreView)
+		private readonly topicAvgScoreRepository: Repository<TopicAvgScoreView>,
 		private readonly studentResultService: StudentResultService,
 	) {}
 
@@ -342,11 +348,9 @@ export class ClassService {
 	private async buildGpaDistribution(
 		classId: string,
 	): Promise<[{ grade: number; count: number }[], number]> {
-		const rows: { gpa: string }[] =
-			await this.studentResultRepository.manager.query(
-				`SELECT gpa FROM vw_student_class_gpa WHERE class_id = $1`,
-				[classId],
-			);
+		const rows = await this.studentClassGpaRepository.find({
+			where: { classId },
+		});
 
 		if (rows.length === 0) return [[], 0];
 
@@ -372,15 +376,13 @@ export class ClassService {
 	private async buildTopicAvgScores(
 		classId: string,
 	): Promise<{ topic: string; avg: number }[]> {
-		const rows: { topic_name: string; avg_score: string }[] =
-			await this.studentResultRepository.manager.query(
-				`SELECT topic_name, avg_score FROM vw_topic_avg_score WHERE class_id = $1`,
-				[classId],
-			);
+		const rows = await this.topicAvgScoreRepository.find({
+			where: { classId },
+		});
 
 		return rows.map((r) => ({
-			topic: r.topic_name,
-			avg: Number(r.avg_score),
+			topic: r.topicName,
+			avg: Number(r.avgScore),
 		}));
 	}
 
