@@ -1,4 +1,5 @@
 {
 	"GET_PROFILE_SUCCESS": "Profile retrieved successfully.",
-	"SETUP_ROLE_SUCCESS": "User role updated successfully."
+	"SETUP_ROLE_SUCCESS": "User role updated successfully.",
+	"GET_CLASS_STATS_SUCCESS": "Class stats retrieved successfully."
 }
