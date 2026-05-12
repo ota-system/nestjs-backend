@@ -56,7 +56,7 @@ export class ClassDashboardResponseDto {
 	gpaAcrossTopics!: GpaAcrossTopicDto[];
 
 	@Expose()
-	classAvgScore!: number;
+	classTopicAvgScore!: number;
 
 	@Expose()
 	@Type(() => AvailableTestDto)

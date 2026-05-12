@@ -287,15 +287,15 @@ export class ClassService {
 			createdAt: t.createdAt,
 		}));
 
-		const [gpaDistribution, classAvgScore] =
-			await this.buildGpaDistribution(classId);
+		const [gpaDistribution] = await this.buildGpaDistribution(classId);
 		const gpaAcrossTopics = await this.buildTopicAvgScores(classId);
+		const classTopicAvgScore = this.buildClassTopicAvgScore(gpaAcrossTopics);
 
 		return {
 			className: classroom.name,
 			gpaDistribution,
 			gpaAcrossTopics,
-			classAvgScore,
+			classTopicAvgScore,
 			availableTests,
 		};
 	}
@@ -384,6 +384,18 @@ export class ClassService {
 			topic: r.topicName,
 			avg: Number(r.avgScore),
 		}));
+	}
+
+	private buildClassTopicAvgScore(
+		gpaAcrossTopics: { topic: string; avg: number }[],
+	): number {
+		return gpaAcrossTopics.length > 0
+			? Math.round(
+					(gpaAcrossTopics.reduce((sum, item) => sum + item.avg, 0) /
+						gpaAcrossTopics.length) *
+						100,
+				) / 100
+			: 0;
 	}
 
 	private async buildTestResults(testId: string): Promise<{
