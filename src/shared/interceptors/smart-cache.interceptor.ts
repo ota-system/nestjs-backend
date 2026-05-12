@@ -50,7 +50,14 @@ export class UniversalSmartCacheInterceptor implements NestInterceptor {
 		if (!id) return next.handle();
 
 		const userId = request.user?.sub || request.user?.id;
-		const cacheKey = `${options.keyPrefix}:${userId}:${id}`;
+		const query = request.query as Record<string, string>;
+		const queryString = Object.keys(query)
+			.sort()
+			.map((k) => `${k}=${query[k]}`)
+			.join("&");
+		const cacheKey = queryString
+			? `${options.keyPrefix}:${userId}:${id}:${queryString}`
+			: `${options.keyPrefix}:${userId}:${id}`;
 
 		const cached = await this.redisService.getCache(cacheKey, z.any());
 		if (cached !== null) {
