@@ -5,8 +5,8 @@ export class ClassAnalyticsItemDto {
 	testName!: string;
 
 	@Expose()
-	@Transform(({ value }) => Number(value ?? 0))
-	myScore!: number;
+	@Transform(({ value }) => (value === null ? null : Number(value)))
+	myScore!: number | null;
 
 	@Expose()
 	@Transform(({ value }) => Number(value ?? 0))

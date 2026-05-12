@@ -45,7 +45,7 @@ export class StudentService {
 
 		const rows: Array<{
 			testName: string;
-			myScore: number;
+			myScore: number | null;
 			classAvgScore: number;
 			classMaxScore: number;
 			classMinScore: number;
@@ -57,9 +57,9 @@ export class StudentService {
 				cs.avg_score      AS "classAvgScore",
 				cs.max_score      AS "classMaxScore",
 				cs.min_score      AS "classMinScore"
-			FROM student_results my_sr
-			INNER JOIN tests t ON t.id = my_sr.exam_id
+			FROM tests t
 			INNER JOIN classes c ON c.id = t.class_id
+			LEFT JOIN student_results my_sr ON my_sr.exam_id = t.id AND my_sr.student_id = $1
 			INNER JOIN (
 				SELECT
 					sr2.exam_id,
@@ -70,9 +70,8 @@ export class StudentService {
 				INNER JOIN tests t2 ON t2.id = sr2.exam_id
 				WHERE t2.class_id = $2
 				GROUP BY sr2.exam_id
-			) cs ON cs.exam_id = my_sr.exam_id
-			WHERE my_sr.student_id = $1
-			  AND c.id = $2
+			) cs ON cs.exam_id = t.id
+			WHERE c.id = $2
 			ORDER BY t.started_time ASC
 			`,
 			[studentId, classId],
