@@ -37,6 +37,12 @@ export class ClassService {
 		private readonly studentResultService: StudentResultService,
 	) {}
 
+	async refreshStudentClassGpaView(): Promise<void> {
+		await this.studentClassGpaRepository.query(
+			"REFRESH MATERIALIZED VIEW CONCURRENTLY vw_student_class_gpa",
+		);
+	}
+
 	async createClass(dto: CreateClassDto) {
 		const code = await this.generateUniqueClassCode();
 
