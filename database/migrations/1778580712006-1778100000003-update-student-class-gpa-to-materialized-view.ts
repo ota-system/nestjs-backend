@@ -4,9 +4,14 @@ export class UpdateStudentClassGpaToMaterializedView1778580712006
 	implements MigrationInterface
 {
 	name = "UpdateStudentClassGpaToMaterializedView1778580712006";
+	public transaction = false;
 
 	public async up(queryRunner: QueryRunner): Promise<void> {
 		await queryRunner.query(`DROP VIEW IF EXISTS vw_student_class_gpa`);
+
+		await queryRunner.query(
+			`DROP MATERIALIZED VIEW IF EXISTS vw_student_class_gpa`,
+		);
 
 		await queryRunner.query(`
 			CREATE MATERIALIZED VIEW vw_student_class_gpa AS

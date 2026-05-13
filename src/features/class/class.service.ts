@@ -5,7 +5,6 @@ import { ClassEntity } from "../../database/entities/class.entity";
 import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { TestEntity } from "../../database/entities/test.entity";
 import { UserEntity } from "../../database/entities/user.entity";
-import { StudentClassGpaView } from "../../database/views/student-class-gpa.view";
 import { BaseException } from "../../shared/exception/base.exception";
 import { StudentResultService } from "../../shared/services/student-result.service";
 import { UserRole } from "../../shared/types/user-role.enum";
@@ -25,17 +24,9 @@ export class ClassService {
 		private readonly testRepository: Repository<TestEntity>,
 		@InjectRepository(UserEntity)
 		private readonly userRepository: Repository<UserEntity>,
-		@InjectRepository(StudentClassGpaView)
-		private readonly studentClassGpaRepository: Repository<StudentClassGpaView>,
+
 		private readonly studentResultService: StudentResultService,
 	) {}
-
-	async refreshStudentClassGpaView(): Promise<void> {
-		await this.studentClassGpaRepository.query(
-			"REFRESH MATERIALIZED VIEW CONCURRENTLY vw_student_class_gpa",
-		);
-	}
-	//TODO: create a new analysis feature, create a cronjob with bullmq to process refreshing when submitting test, also report this solution for mentors
 
 	async createClass(dto: CreateClassDto) {
 		const code = await this.generateUniqueClassCode();

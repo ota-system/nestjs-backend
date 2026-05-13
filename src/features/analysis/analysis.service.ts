@@ -1,11 +1,14 @@
+import { InjectQueue } from "@nestjs/bullmq";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { Queue } from "bullmq";
 import { Repository } from "typeorm";
 import { ClassEntity } from "../../database/entities/class.entity";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { TestEntity } from "../../database/entities/test.entity";
 import { StudentClassGpaView } from "../../database/views/student-class-gpa.view";
 import { TopicAvgScoreView } from "../../database/views/topic-avg-score.view";
+import { REFRESH_VIEW_QUEUE } from "../../shared/constants/queue.constant";
 import { AccessForbiddenException } from "../../shared/exception/access-forbidden.exception";
 
 @Injectable()
@@ -21,6 +24,8 @@ export class AnalysisService {
 		private readonly studentClassGpaRepository: Repository<StudentClassGpaView>,
 		@InjectRepository(TopicAvgScoreView)
 		private readonly topicAvgScoreRepository: Repository<TopicAvgScoreView>,
+		@InjectQueue(REFRESH_VIEW_QUEUE)
+		private readonly refreshQueue: Queue,
 	) {}
 
 	async getClassDashboardStats(classId: string, teacherId: string) {
@@ -181,5 +186,19 @@ export class AnalysisService {
 			.sort((a, b) => b.score - a.score);
 
 		return { testGrades, studentScores };
+	}
+
+	async triggerRefreshGpaView() {
+		const VIEW_NAME = "vw_student_class_gpa";
+		await this.refreshQueue.add(
+			REFRESH_VIEW_QUEUE,
+			{ viewName: VIEW_NAME },
+			{
+				jobId: `refresh-${VIEW_NAME}`,
+				delay: 10000,
+				removeOnComplete: true,
+				removeOnFail: { age: 3600 },
+			},
+		);
 	}
 }
