@@ -1,31 +1,23 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ClassEntity } from "../../database/entities/class.entity";
-import { StudentClassEntity } from "../../database/entities/student-class.entity";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { TestEntity } from "../../database/entities/test.entity";
-import { UserEntity } from "../../database/entities/user.entity";
 import { StudentClassGpaView } from "../../database/views/student-class-gpa.view";
 import { TopicAvgScoreView } from "../../database/views/topic-avg-score.view";
-import { StudentResultService } from "../../shared/services/student-result.service";
-import { AnalysisModule } from "../analysis/analysis.module";
-import { ClassController } from "./class.controller";
-import { ClassService } from "./class.service";
+import { AnalysisService } from "./analysis.service";
 
 @Module({
 	imports: [
 		TypeOrmModule.forFeature([
 			ClassEntity,
-			StudentClassEntity,
 			TestEntity,
-			UserEntity,
 			StudentResultEntity,
 			StudentClassGpaView,
 			TopicAvgScoreView,
 		]),
-		AnalysisModule,
 	],
-	controllers: [ClassController],
-	providers: [ClassService, StudentResultService],
+	providers: [AnalysisService],
+	exports: [AnalysisService],
 })
-export class ClassModule {}
+export class AnalysisModule {}

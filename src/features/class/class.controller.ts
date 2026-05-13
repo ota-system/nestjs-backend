@@ -9,6 +9,7 @@ import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { UserRole } from "../../shared/types/user-role.enum";
+import { AnalysisService } from "../analysis/analysis.service";
 import { ClassService } from "./class.service";
 import { ClassResponseDto, UserSummaryDto } from "./dtos/class-res.dto";
 import { CreateClassRequestDto } from "./dtos/create-class-req.dto";
@@ -21,7 +22,10 @@ import { TestWithStatsResponseDto } from "./dtos/test-stats-res.dto";
 @ApiBearerAuth()
 @Controller({ path: "classes", version: "1" })
 export class ClassController {
-	constructor(private readonly classService: ClassService) {}
+	constructor(
+		private readonly classService: ClassService,
+		private readonly analysisService: AnalysisService,
+	) {}
 
 	@Post()
 	@Auth(UserRole.TEACHER)
@@ -62,7 +66,7 @@ export class ClassController {
 		@Param("classId") classId: string,
 		@User() user: JwtPayload,
 	) {
-		const data = await this.classService.getClassDashboardStats(
+		const data = await this.analysisService.getClassDashboardStats(
 			classId,
 			user.sub,
 		);
@@ -82,7 +86,7 @@ export class ClassController {
 		@User() user: JwtPayload,
 		@Query("testId") testId?: string,
 	) {
-		const data = await this.classService.getTestDashboardStats(
+		const data = await this.analysisService.getTestDashboardStats(
 			classId,
 			user.sub,
 			testId,

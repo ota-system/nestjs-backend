@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { I18nModule } from "nestjs-i18n";
+import { AnalysisModule } from "./features/analysis/analysis.module";
 import { AuthModule } from "./features/auth/auth.module";
 import { ClassModule } from "./features/class/class.module";
 import { HealthModule } from "./features/health/health.module";
@@ -72,6 +73,7 @@ import { SharedModule } from "./shared/shared.module";
 		QuestionModule,
 		StudentModule,
 		StudentResultModule,
+		AnalysisModule,
 	],
 })
 export class AppModule {}
