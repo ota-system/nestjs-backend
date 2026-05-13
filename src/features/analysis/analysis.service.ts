@@ -1,5 +1,5 @@
 import { InjectQueue } from "@nestjs/bullmq";
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Queue } from "bullmq";
 import { Repository } from "typeorm";
@@ -188,17 +188,25 @@ export class AnalysisService {
 		return { testGrades, studentScores };
 	}
 
-	async triggerRefreshGpaView() {
+	async triggerRefreshGpaView(): Promise<void> {
 		const VIEW_NAME = "vw_student_class_gpa";
-		await this.refreshQueue.add(
-			REFRESH_VIEW_QUEUE,
-			{ viewName: VIEW_NAME },
-			{
-				jobId: `refresh-${VIEW_NAME}`,
-				delay: 10000,
-				removeOnComplete: true,
-				removeOnFail: { age: 3600 },
-			},
-		);
+
+		try {
+			await this.refreshQueue.add(
+				REFRESH_VIEW_QUEUE,
+				{ viewName: VIEW_NAME },
+				{
+					jobId: `refresh-${VIEW_NAME}`,
+					delay: 10000,
+					removeOnComplete: true,
+					removeOnFail: { age: 3600 },
+				},
+			);
+		} catch (error) {
+			Logger.error(
+				`Failed to enqueue refresh view job: ${VIEW_NAME}`,
+				error instanceof Error ? error.stack : String(error),
+			);
+		}
 	}
 }
