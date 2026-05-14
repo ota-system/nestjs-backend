@@ -16,10 +16,6 @@ class QuestionDto {
 	@IsNotEmpty()
 	question!: string;
 
-	@IsString()
-	@IsNotEmpty()
-	topic!: string;
-
 	@IsEnum(Difficulty)
 	@IsNotEmpty()
 	difficulty!: Difficulty;
@@ -46,6 +42,10 @@ export class SavedTestRequestDto {
 	@IsString()
 	@IsNotEmpty()
 	testName!: string;
+
+	@IsString()
+	@IsNotEmpty()
+	topicName!: string;
 
 	@IsString()
 	@IsNotEmpty()

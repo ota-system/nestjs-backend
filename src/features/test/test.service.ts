@@ -218,6 +218,7 @@ export class TestService {
 
 		await this.redisService.delCache(fraudKey);
 		return {
+			resultId: studentResult.id,
 			score,
 			correctRate: correctRate,
 			subject: test.topic?.topicName ?? "Unknown",
