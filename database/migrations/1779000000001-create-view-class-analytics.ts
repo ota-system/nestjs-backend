@@ -13,19 +13,14 @@ export class CreateViewClassAnalytics1779000000001
 		await queryRunner.query(`
             CREATE MATERIALIZED VIEW vw_class_analytics AS
             SELECT
-                COALESCE(my_sr.id::text, t.id::text || '_none') AS unique_row_id,
-                t.test_name,
                 t.id AS test_id,
-                my_sr.student_id,
-                my_sr.score::float AS my_score,
-                cs.avg_score::float AS class_avg_score,
-                cs.max_score::float AS class_max_score,
-                cs.min_score::float AS class_min_score,
+                t.test_name,
                 t.class_id,
                 t.started_time,
-                my_sr.created_at AS submission_time -- Thêm thời gian nộp để dễ sắp xếp
+                cs.avg_score::float AS class_avg_score,
+                cs.max_score::float AS class_max_score,
+                cs.min_score::float AS class_min_score
             FROM tests t
-            LEFT JOIN student_results my_sr ON my_sr.exam_id = t.id AND my_sr.deleted_at IS NULL
             LEFT JOIN (
                 SELECT
                     sr2.exam_id,
@@ -40,13 +35,13 @@ export class CreateViewClassAnalytics1779000000001
         `);
 
 		await queryRunner.query(`
-            CREATE UNIQUE INDEX idx_vw_class_analytics_unique_id 
-            ON vw_class_analytics (unique_row_id)
+            CREATE UNIQUE INDEX idx_vw_class_analytics_test_id 
+            ON vw_class_analytics (test_id)
         `);
 
 		await queryRunner.query(`
-            CREATE INDEX idx_vw_class_analytics_search 
-            ON vw_class_analytics (student_id, class_id)
+            CREATE INDEX idx_vw_class_analytics_class 
+            ON vw_class_analytics (class_id)
         `);
 	}
 

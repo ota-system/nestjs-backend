@@ -44,9 +44,29 @@ export class StudentService {
 	}
 
 	async getClassAnalytics(studentId: string, classId: string) {
-		return this.classAnalyticsRepository.find({
-			where: { studentId, classId },
-			order: { startedTime: "ASC" },
-		});
+		return this.classAnalyticsRepository
+			.createQueryBuilder("analytics")
+			.leftJoin(
+				StudentResultEntity,
+				"sr",
+				"sr.exam_id = analytics.test_id AND sr.student_id = :studentId AND sr.deleted_at IS NULL",
+				{ studentId },
+			)
+			.select([
+				'analytics.testName AS "testName"',
+				'MAX(sr.score) AS "myScore"',
+				'analytics.classAvgScore AS "classAvgScore"',
+				'analytics.classMaxScore AS "classMaxScore"',
+				'analytics.classMinScore AS "classMinScore"',
+			])
+			.where("analytics.class_id = :classId", { classId })
+			.groupBy("analytics.test_id")
+			.addGroupBy("analytics.testName")
+			.addGroupBy("analytics.classAvgScore")
+			.addGroupBy("analytics.classMaxScore")
+			.addGroupBy("analytics.classMinScore")
+			.addGroupBy("analytics.startedTime")
+			.orderBy("analytics.startedTime", "ASC")
+			.getRawMany();
 	}
 }
