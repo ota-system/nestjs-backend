@@ -2,12 +2,15 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
+import { ClassAnalyticsView } from "../../database/views/class-analytics.view";
 
 @Injectable()
 export class StudentService {
 	constructor(
 		@InjectRepository(StudentResultEntity)
 		private readonly studentResultRepository: Repository<StudentResultEntity>,
+		@InjectRepository(ClassAnalyticsView)
+		private readonly classAnalyticsRepository: Repository<ClassAnalyticsView>,
 	) {}
 
 	async getStudentResults(studentId: string) {
@@ -41,42 +44,9 @@ export class StudentService {
 	}
 
 	async getClassAnalytics(studentId: string, classId: string) {
-		const manager = this.studentResultRepository.manager;
-
-		const rows: Array<{
-			testName: string;
-			myScore: number | null;
-			classAvgScore: number;
-			classMaxScore: number;
-			classMinScore: number;
-		}> = await manager.query(
-			`
-			SELECT
-				t.test_name       AS "testName",
-				my_sr.score       AS "myScore",
-				cs.avg_score      AS "classAvgScore",
-				cs.max_score      AS "classMaxScore",
-				cs.min_score      AS "classMinScore"
-			FROM tests t
-			INNER JOIN classes c ON c.id = t.class_id
-			LEFT JOIN student_results my_sr ON my_sr.exam_id = t.id AND my_sr.student_id = $1
-			INNER JOIN (
-				SELECT
-					sr2.exam_id,
-					AVG(sr2.score)::float AS avg_score,
-					MAX(sr2.score)::float AS max_score,
-					MIN(sr2.score)::float AS min_score
-				FROM student_results sr2
-				INNER JOIN tests t2 ON t2.id = sr2.exam_id
-				WHERE t2.class_id = $2
-				GROUP BY sr2.exam_id
-			) cs ON cs.exam_id = t.id
-			WHERE c.id = $2
-			ORDER BY t.started_time ASC
-			`,
-			[studentId, classId],
-		);
-
-		return rows;
+		return this.classAnalyticsRepository.find({
+			where: { studentId, classId },
+			order: { startedTime: "ASC" },
+		});
 	}
 }
