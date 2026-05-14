@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { I18nModule } from "nestjs-i18n";
+import { AnalysisModule } from "./features/analysis/analysis.module";
 import { AuthModule } from "./features/auth/auth.module";
 import { ClassModule } from "./features/class/class.module";
 import { HealthModule } from "./features/health/health.module";
@@ -19,6 +20,7 @@ import { getI18nConfig, i18nResolvers } from "./shared/configs/i18n.config";
 import { getMailerConfig } from "./shared/configs/mailer.config";
 import { getRedisConfig } from "./shared/configs/redis.config";
 import { getTypeOrmConfig } from "./shared/configs/type-orm.config";
+import { REFRESH_VIEW_QUEUE } from "./shared/constants/queue.constant";
 import { SharedModule } from "./shared/shared.module";
 
 @Module({
@@ -52,7 +54,10 @@ import { SharedModule } from "./shared/shared.module";
 			inject: [ConfigService],
 			useFactory: getBullConfig,
 		}),
-		BullModule.registerQueue({ name: "mail_queue" }),
+		BullModule.registerQueue(
+			{ name: "mail_queue" },
+			{ name: REFRESH_VIEW_QUEUE },
+		),
 
 		// 5. Mailer
 		MailerModule.forRootAsync({
@@ -72,6 +77,7 @@ import { SharedModule } from "./shared/shared.module";
 		QuestionModule,
 		StudentModule,
 		StudentResultModule,
+		AnalysisModule,
 	],
 })
 export class AppModule {}

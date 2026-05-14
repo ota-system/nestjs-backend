@@ -14,6 +14,7 @@ import { RedisService } from "../../shared/redis/redis.service";
 import { StudentResultService } from "../../shared/services/student-result.service";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { checkTimesUp } from "../../shared/utils/checkTimesUp.util";
+import { AnalysisService } from "../analysis/analysis.service";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { TestFraudListSchema } from "./schema/test-fraud.schema";
 import { FraudType, SubmitTestAnswer, TestFraudCache } from "./type";
@@ -45,6 +46,7 @@ export class TestService {
 
 		private readonly studentResultService: StudentResultService,
 		private readonly redisService: RedisService,
+		private readonly analysisService: AnalysisService,
 	) {}
 
 	async validateTestAccess(test: TestEntity, userId: string, role: UserRole) {
@@ -212,6 +214,8 @@ export class TestService {
 		});
 
 		await this.studentResultRepository.save(studentResult);
+		await this.analysisService.triggerRefreshGpaView();
+
 		await this.redisService.delCache(fraudKey);
 		return {
 			score,
