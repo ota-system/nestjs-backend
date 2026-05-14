@@ -24,6 +24,7 @@ export class ClassService {
 		private readonly testRepository: Repository<TestEntity>,
 		@InjectRepository(UserEntity)
 		private readonly userRepository: Repository<UserEntity>,
+
 		private readonly studentResultService: StudentResultService,
 	) {}
 
@@ -252,7 +253,7 @@ export class ClassService {
 			maxScore: 10,
 			stats: {
 				attempts: Number(t.attempts),
-				averageScore: Number(t.averageScore),
+				averageScore: Math.round((Number(t.averageScore) || 0) * 10) / 10,
 				highestScore: Number(t.highestScore),
 			},
 		}));

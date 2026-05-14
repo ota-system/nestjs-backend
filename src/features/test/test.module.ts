@@ -13,6 +13,7 @@ import {
 } from "../../shared/interceptors/smart-cache.interceptor";
 import { StudentResultService } from "../../shared/services/student-result.service";
 import { SharedModule } from "../../shared/shared.module";
+import { AnalysisModule } from "../analysis/analysis.module";
 import { QuestionModule } from "../question/question.module";
 import { TestController } from "./test.controller";
 import { TestService } from "./test.service";
@@ -29,6 +30,7 @@ import { TestService } from "./test.service";
 		]),
 		SharedModule,
 		QuestionModule,
+		AnalysisModule,
 	],
 	controllers: [TestController],
 	providers: [

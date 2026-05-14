@@ -1,5 +1,6 @@
 import { ConfigService } from "@nestjs/config";
 import type { JwtModuleOptions } from "@nestjs/jwt";
+import { ENV_KEY } from "../constants/env.constant";
 
 export const getJwtConfig = (
 	configService: ConfigService,
@@ -10,6 +11,6 @@ export const getJwtConfig = (
 	),
 	signOptions: {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		expiresIn: configService.get<string>("JWT_ACCESS_EXPIRES", "15m") as any,
+		expiresIn: ENV_KEY.JWT_ACCESS_EXPIRES(configService) as any,
 	},
 });

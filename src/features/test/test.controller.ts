@@ -25,10 +25,12 @@ import { PageParams } from "../../shared/types/page-param.type";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { TestQuestionDto } from "../question/dtos/question-res.dto";
 import { QuestionService } from "../question/question.service";
+import { CreateTestFraudReqDto } from "./dtos/create-test-fraud.req.dto";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { SubmitTestResponseDto } from "./dtos/submit-test.res.dto";
 import { ExamResponseDto } from "./dtos/tesst-res.dto";
 import { TestService } from "./test.service";
+import { FraudType } from "./type";
 
 @ApiBearerAuth()
 @Controller({ path: "tests", version: "1" })
@@ -99,6 +101,14 @@ export class TestController {
 			user.sub,
 			user.role,
 		);
+		if (user.role === UserRole.STUDENT) {
+			await this.testService.saveTestStartTimeOfStudent({
+				studentId: user.sub,
+				testId,
+				startTime: test.startedTime,
+			});
+		}
+
 		const response = await this.questionService.getQuestionsForTest(
 			test,
 			query.page,
@@ -166,5 +176,29 @@ export class TestController {
 			}),
 			result.metadata,
 		);
+	}
+
+	@Post(":testId/fraud-reports")
+	@Auth(UserRole.STUDENT)
+	async storeTestFraudResult(
+		@Param("testId") testId: string,
+		@User() user: JwtPayload,
+		@Body() fraud: CreateTestFraudReqDto,
+		@I18n() i18n: I18nContext,
+	) {
+		await this.testService.storeTestFraudResult(
+			testId,
+			user.sub,
+			user.role,
+			fraud.fraudType,
+		);
+		if (fraud.fraudType === FraudType.VISIBILITY_CHANGE) {
+			return BaseResponse.ok(
+				null,
+				await i18n.t("test.WINDOW_VISIBILITY_CHANGED"),
+			);
+		}
+
+		return BaseResponse.ok(null, await i18n.t("test.FULLSCREEN_EXIT_DETECTED"));
 	}
 }

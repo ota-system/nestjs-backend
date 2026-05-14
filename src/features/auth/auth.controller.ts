@@ -8,6 +8,7 @@ import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { AuthService } from "./auth.service";
 import type { AuthTokensResDto } from "./dtos/auth-tokens-res.dto";
+import { RefreshTokenDto } from "./dtos/refresh-token.dto";
 import { SignInRequestDto } from "./dtos/sign-in-req.dto";
 import { SignOutDto } from "./dtos/sign-out.dto";
 import { SignUpDto } from "./dtos/sign-up.dto";
@@ -89,5 +90,15 @@ export class AuthController {
 			dto.refreshToken,
 		);
 		return BaseResponse.ok(null, await i18n.t("auth.SIGN_OUT_SUCCESS"));
+	}
+
+	@Post("refresh-token")
+	@HttpCode(200)
+	async refreshToken(
+		@Body() dto: RefreshTokenDto,
+		@I18n() i18n: I18nContext,
+	): Promise<BaseResponse<{ accessToken: string }>> {
+		const tokens = await this.authService.refreshToken(dto.refreshToken);
+		return BaseResponse.ok(tokens, await i18n.t("auth.REFRESH_TOKEN_SUCCESS"));
 	}
 }

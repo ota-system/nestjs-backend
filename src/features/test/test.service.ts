@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-
+import { z } from "zod";
 import { ChoiceEntity } from "../../database/entities/choice.entity";
 import { ClassEntity } from "../../database/entities/class.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
@@ -10,14 +10,18 @@ import { StudentResultEntity } from "../../database/entities/student-result.enti
 import { TestEntity } from "../../database/entities/test.entity";
 import { UUID_REGEX } from "../../shared/constants/uuid.constant";
 import { BaseException } from "../../shared/exception/base.exception";
+import { RedisService } from "../../shared/redis/redis.service";
 import { StudentResultService } from "../../shared/services/student-result.service";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { checkTimesUp } from "../../shared/utils/checkTimesUp.util";
+import { AnalysisService } from "../analysis/analysis.service";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
-import { SubmitTestAnswer } from "./type";
+import { TestFraudListSchema } from "./schema/test-fraud.schema";
+import { FraudType, SubmitTestAnswer, TestFraudCache } from "./type";
 import { batchLoad } from "./utils/batch-load.util";
 import calculateCorrectRate from "./utils/calculate-correct-rate.util";
 import calculateScore from "./utils/calculate-score.util";
+import { calculateTestTimeSpent } from "./utils/calculate-test-time-spent";
 
 @Injectable()
 export class TestService {
@@ -41,6 +45,8 @@ export class TestService {
 		private readonly studentClassRepository: Repository<StudentClassEntity>,
 
 		private readonly studentResultService: StudentResultService,
+		private readonly redisService: RedisService,
+		private readonly analysisService: AnalysisService,
 	) {}
 
 	async validateTestAccess(test: TestEntity, userId: string, role: UserRole) {
@@ -136,7 +142,12 @@ export class TestService {
 			where: { id: testId },
 			relations: { topic: true },
 		});
-		const totalQuestions = test?.totalQuestions ?? answers.length;
+
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+
+		const totalQuestions = test.totalQuestions;
 
 		const questionIds = answers.map((a) => a.questionId);
 		const questionsMap = await batchLoad(this.questionRepository, questionIds);
@@ -181,21 +192,38 @@ export class TestService {
 
 		const correctRate = calculateCorrectRate(correct, totalQuestions);
 
+		const fraudKey = `fraud:${testId}:${studentId}`;
+		const fraudData = await this.redisService.getCache<{
+			frauds: TestFraudCache[];
+		}>(fraudKey, TestFraudListSchema);
+
+		const timespent = await calculateTestTimeSpent(
+			this.redisService,
+			testId,
+			studentId,
+		);
+
 		const studentResult = this.studentResultRepository.create({
 			student: { id: studentId },
 			exam: { id: testId },
 			score,
 			studentAnswers,
 			correctRate: correctRate,
+			timespent,
+			fraud: fraudData?.frauds ?? [],
 		});
 
 		await this.studentResultRepository.save(studentResult);
+		await this.analysisService.triggerRefreshGpaView();
+
+		await this.redisService.delCache(fraudKey);
 		return {
 			score,
 			correctRate: correctRate,
-			subject: test?.topic?.topicName ?? "Unknown",
+			subject: test.topic?.topicName ?? "Unknown",
 			correctQuestions: correct,
 			totalQuestions,
+			fraud: fraudData?.frauds ?? [],
 		};
 	}
 
@@ -235,30 +263,16 @@ export class TestService {
 		});
 
 		const data = results.map((result) => {
-			let violations = 0;
-			if (Array.isArray(result.mistakes)) {
-				violations = result.mistakes.length;
-			} else if (result.mistakes) {
-				violations = Object.keys(result.mistakes as object).length;
-			}
-
-			let durationMinutes = 0;
-			if (result.exam?.startedTime && result.createdAt) {
-				const diffMs =
-					result.createdAt.getTime() - result.exam.startedTime.getTime();
-				durationMinutes = Math.max(0, Math.floor(diffMs / 60000));
-			}
-
 			const maxScore = 10;
 
 			return {
 				id: result.id, // Included for React key
 				studentName: result.student?.fullName || "Unknown",
-				violations,
+				violations: result.fraud?.length || 0,
 				score: result.score,
 				totalScore: maxScore,
 				percentage: result.correctRate,
-				durationMinutes,
+				durationMinutes: result.timespent,
 				submittedAt: result.createdAt.toISOString().split("T")[0],
 			};
 		});
@@ -321,6 +335,71 @@ export class TestService {
 		const hasAccess = await this.checkAccess(test.class.id, userId, role);
 		if (!hasAccess) {
 			throw new BaseException(403, "TEST_ACCESS_DENIED");
+		}
+	}
+
+	async storeTestFraudResult(
+		testId: string,
+		studentId: string,
+		role: UserRole,
+		fraudType: FraudType,
+	) {
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: ["class"],
+		});
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+
+		await this.validateTestAccess(test, studentId, role);
+
+		const key = `fraud:${testId}:${studentId}`;
+
+		const fraudsExisting = await this.redisService.getCache<{
+			frauds: TestFraudCache[];
+		}>(key, TestFraudListSchema);
+
+		if (fraudsExisting) {
+			const fraudExisting = fraudsExisting.frauds.find(
+				(f) => f.type === fraudType,
+			);
+			if (fraudExisting) {
+				fraudExisting.times += 1;
+			} else {
+				fraudsExisting.frauds.push({ type: fraudType, times: 1 });
+			}
+			await this.redisService.setCache(key, fraudsExisting);
+		} else {
+			await this.redisService.setCache(key, {
+				frauds: [{ type: fraudType, times: 1 }],
+			});
+		}
+		return null;
+	}
+
+	async saveTestStartTimeOfStudent({
+		studentId,
+		testId,
+		startTime,
+	}: {
+		studentId: string;
+		testId: string;
+		startTime: Date;
+	}) {
+		const testStartTimeKey = `test_start_time:${testId}:${studentId}`;
+		const existingValue = await this.redisService.getCache<number>(
+			testStartTimeKey,
+			z.number(),
+		);
+		if (!existingValue) {
+			await this.redisService.setCache(
+				testStartTimeKey,
+				Date.now(),
+				startTime
+					? Math.ceil((startTime.getTime() - Date.now()) / 1000)
+					: 3600 * 24,
+			);
 		}
 	}
 }

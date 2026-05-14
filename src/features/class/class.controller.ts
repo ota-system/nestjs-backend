@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, Req } from "@nestjs/common";
 import { ApiBearerAuth } from "@nestjs/swagger";
 import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
@@ -9,15 +9,23 @@ import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
 import { UserRole } from "../../shared/types/user-role.enum";
+import { AnalysisService } from "../analysis/analysis.service";
 import { ClassService } from "./class.service";
 import { ClassResponseDto, UserSummaryDto } from "./dtos/class-res.dto";
 import { CreateClassRequestDto } from "./dtos/create-class-req.dto";
+import {
+	ClassDashboardResponseDto,
+	TestDashboardResponseDto,
+} from "./dtos/dashboard-res.dto";
 import { TestWithStatsResponseDto } from "./dtos/test-stats-res.dto";
 
 @ApiBearerAuth()
 @Controller({ path: "classes", version: "1" })
 export class ClassController {
-	constructor(private readonly classService: ClassService) {}
+	constructor(
+		private readonly classService: ClassService,
+		private readonly analysisService: AnalysisService,
+	) {}
 
 	@Post()
 	@Auth(UserRole.TEACHER)
@@ -48,6 +56,46 @@ export class ClassController {
 				excludeExtraneousValues: true,
 			}),
 			i18n.t("class.GET_CLASS_LIST_SUCCESS"),
+		);
+	}
+
+	@Get(":classId/dashboard/class-stats")
+	@Auth(UserRole.TEACHER)
+	async getClassDashboardStats(
+		@I18n() i18n: I18nContext,
+		@Param("classId") classId: string,
+		@User() user: JwtPayload,
+	) {
+		const data = await this.analysisService.getClassDashboardStats(
+			classId,
+			user.sub,
+		);
+		return BaseResponse.ok(
+			plainToInstance(ClassDashboardResponseDto, data, {
+				excludeExtraneousValues: true,
+			}),
+			i18n.t("class.GET_CLASS_DETAIL_SUCCESS"),
+		);
+	}
+
+	@Get(":classId/dashboard/test-stats")
+	@Auth(UserRole.TEACHER)
+	async getTestDashboardStats(
+		@I18n() i18n: I18nContext,
+		@Param("classId") classId: string,
+		@User() user: JwtPayload,
+		@Query("testId") testId?: string,
+	) {
+		const data = await this.analysisService.getTestDashboardStats(
+			classId,
+			user.sub,
+			testId,
+		);
+		return BaseResponse.ok(
+			plainToInstance(TestDashboardResponseDto, data, {
+				excludeExtraneousValues: true,
+			}),
+			i18n.t("class.GET_CLASS_DETAIL_SUCCESS"),
 		);
 	}
 
