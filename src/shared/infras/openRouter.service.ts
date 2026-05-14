@@ -8,8 +8,8 @@ import { teacherDeveloperPrompt } from "./constants";
 import { teacherErrorTool } from "./constants/teacher-error-tool";
 import TeacherExceptionSchema from "./schema/teacher-exception.schema";
 import TeacherQuestionSchema from "./schema/teacher-question.schema";
-import TeacherPromptError from "./types/teacher-prompt-error.type";
-import TeacherQuestion from "./types/teacher-question.type";
+import type { TeacherPromptError } from "./types/teacher-prompt-error.type";
+import type { TeacherQuestion } from "./types/teacher-question.type";
 
 const teacherTools = [teacherErrorTool];
 
