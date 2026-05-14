@@ -22,7 +22,7 @@
 		"typecheck": "tsc --noEmit",
 		"typeorm": "ts-node ./node_modules/typeorm/cli",
 		"migration:generate": "npm run build && npm run typeorm -- -d src/database/data-source.ts migration:generate",
-		"migration:run": "npm run build && npm run typeorm -- -d src/database/data-source.ts migration:run",
+		"migration:run": "npm run build && npm run typeorm -- -d src/database/data-source.ts migration:run --transaction each",
 		"migration:revert": "npm run build && npm run typeorm -- -d src/database/data-source.ts migration:revert"
 	},
 	"lint-staged": {

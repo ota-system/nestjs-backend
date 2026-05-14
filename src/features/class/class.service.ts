@@ -24,6 +24,7 @@ export class ClassService {
 		private readonly testRepository: Repository<TestEntity>,
 		@InjectRepository(UserEntity)
 		private readonly userRepository: Repository<UserEntity>,
+
 		private readonly studentResultService: StudentResultService,
 	) {}
 
