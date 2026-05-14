@@ -35,6 +35,7 @@ export class QuestionEntity extends BaseEntity {
 	@OneToMany(
 		() => ChoiceEntity,
 		(choice) => choice.question,
+		{ cascade: ["insert", "update", "remove"] },
 	)
 	choices?: ChoiceEntity[];
 }

@@ -71,7 +71,10 @@ export class TestGenerationService {
 					explanation,
 				});
 				const savedQuestion = await questionRepository.save(questionEntity);
-				if (questionType === QuestionType.MULTIPLE_CHOICE) {
+				if (
+					questionType === QuestionType.MULTIPLE_CHOICE ||
+					questionType === QuestionType.TRUE_FALSE
+				) {
 					const choiceRepository = manager.getRepository(ChoiceEntity);
 					for (const option of options) {
 						const choice = choiceRepository.create({

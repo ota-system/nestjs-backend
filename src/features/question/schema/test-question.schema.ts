@@ -12,6 +12,7 @@ const QuestionSchema = z.object({
 			answer: z.string(),
 		}),
 	),
+	answer: z.string().optional(),
 });
 
 export const TestQuestionSchema = z.object({
