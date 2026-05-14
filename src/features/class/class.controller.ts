@@ -8,6 +8,7 @@ import { Auth } from "../../shared/decorators/auth.decorator";
 import { User } from "../../shared/decorators/user.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
 import type { JwtPayload } from "../../shared/types/jwt-payload.type";
+import { PageParams } from "../../shared/types/page-param.type";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { AnalysisService } from "../analysis/analysis.service";
 import { ClassService } from "./class.service";
@@ -47,15 +48,24 @@ export class ClassController {
 	// plainToInstance is used to transform ClassEntity to ClassResponseDto
 	@Get()
 	@Auth(UserRole.TEACHER, UserRole.STUDENT)
-	async getClassList(@I18n() i18n: I18nContext, @User() user: JwtPayload) {
+	async getClassList(
+		@I18n() i18n: I18nContext,
+		@User() user: JwtPayload,
+		@Query() pagination: PageParams,
+	) {
 		const userId: string = user.sub;
 		const role: UserRole = user.role;
-		const classes = await this.classService.getClassList(userId, role);
+		const { data, metadata } = await this.classService.getClassList(
+			userId,
+			role,
+			pagination,
+		);
 		return BaseResponse.ok(
-			plainToInstance(ClassResponseDto, classes, {
+			plainToInstance(ClassResponseDto, data, {
 				excludeExtraneousValues: true,
 			}),
 			i18n.t("class.GET_CLASS_LIST_SUCCESS"),
+			metadata,
 		);
 	}
 

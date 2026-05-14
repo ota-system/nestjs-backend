@@ -7,6 +7,7 @@ import { TestEntity } from "../../database/entities/test.entity";
 import { UserEntity } from "../../database/entities/user.entity";
 import { BaseException } from "../../shared/exception/base.exception";
 import { StudentResultService } from "../../shared/services/student-result.service";
+import { PageParams } from "../../shared/types/page-param.type";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { checkTimesUp } from "../../shared/utils/checkTimesUp.util";
 import { ClassWithCounts } from "./class.type";
@@ -58,27 +59,40 @@ export class ClassService {
 		return code;
 	}
 
-	async getClassList(userId: string, role: string) {
+	async getClassList(userId: string, role: string, pagination: PageParams) {
+		const { page = 1, limit = 10 } = pagination;
+		const skip = (page - 1) * limit;
+
 		if (role === UserRole.TEACHER) {
-			const classes = await this.classRepository.find({
+			const [classes, total] = await this.classRepository.findAndCount({
 				where: { teacher: { id: userId } },
 				order: { createdAt: "DESC" },
 				relations: ["teacher", "students", "tests"],
 				loadEagerRelations: false,
+				skip,
+				take: limit,
 			});
 
-			return classes.map((classroom) => this.withCounts(classroom));
+			return {
+				data: classes.map((classroom) => this.withCounts(classroom)),
+				metadata: { page, limit, totalPages: Math.ceil(total / limit) },
+			};
 		} else if (role === UserRole.STUDENT) {
-			const classes = await this.classRepository.find({
+			const [classes, total] = await this.classRepository.findAndCount({
 				where: { students: { student: { id: userId } } },
 				order: { createdAt: "DESC" },
 				relations: ["teacher", "students", "tests"],
 				loadEagerRelations: false,
+				skip,
+				take: limit,
 			});
 
-			return classes.map((classroom) => this.withCounts(classroom));
+			return {
+				data: classes.map((classroom) => this.withCounts(classroom)),
+				metadata: { page, limit, totalPages: Math.ceil(total / limit) },
+			};
 		}
-		return [];
+		return { data: [], metadata: { page, limit, totalPages: 0 } };
 	}
 
 	async getClassDetail(classId: string, userId: string, role: string) {

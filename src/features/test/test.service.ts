@@ -280,9 +280,9 @@ export class TestService {
 		return {
 			data,
 			metadata: {
-				total,
 				page: Number(page),
 				limit: Number(limit),
+				totalPages: Math.ceil(total / limit),
 			},
 		};
 	}
