@@ -9,5 +9,6 @@
 	"WINDOW_VISIBILITY_CHANGED": "Hệ thống phát hiện bạn đã chuyển sang tab khác hoặc tối thiểu cửa sổ",
 	"FULLSCREEN_EXIT_DETECTED": "Hệ thống phát hiện bạn đã thoát chế độ toàn màn hình",
 	"UPDATE_QUESTION_SUCCESS": "Cập nhật câu hỏi thành công",
-	"DELETE_QUESTION_SUCCESS": "Xóa câu hỏi thành công"
+	"DELETE_QUESTION_SUCCESS": "Xóa câu hỏi thành công",
+	"UPDATE_TEST_INFO_SUCCESS": "Cập nhật thông tin bài thi thành công"
 }
