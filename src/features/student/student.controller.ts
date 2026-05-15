@@ -3,6 +3,7 @@ import { plainToInstance } from "class-transformer";
 import { I18n, I18nContext } from "nestjs-i18n";
 import { Auth } from "../../shared/decorators/auth.decorator";
 import { BaseResponse } from "../../shared/dtos/base-response.dto";
+import { PageParams } from "../../shared/types/page-param.type";
 import { UserRole } from "../../shared/types/user-role.enum";
 import { ClassAnalyticsItemDto } from "./dtos/class-analytics-res.dto";
 import { OverallResultResponseDto } from "./dtos/overall-results-res.dto";
@@ -20,13 +21,18 @@ export class StudentController {
 	async getTestResultListByStudentId(
 		@Param("studentId") studentId: string,
 		@I18n() i18n: I18nContext,
+		@Query() pagination: PageParams,
 	) {
-		const data = await this.studentService.getStudentResults(studentId);
+		const { data, metadata } = await this.studentService.getStudentResults(
+			studentId,
+			pagination,
+		);
 		return BaseResponse.ok(
 			plainToInstance(TestResultResponseDto, data, {
 				excludeExtraneousValues: true,
 			}),
 			i18n.t("student-result.GET_RESULT_LIST_SUCCESS"),
+			metadata,
 		);
 	}
 

@@ -1,6 +1,9 @@
 import { Expose } from "class-transformer";
 export class SubmitTestResponseDto {
 	@Expose()
+	resultId!: string;
+
+	@Expose()
 	score!: GLfloat;
 
 	@Expose()

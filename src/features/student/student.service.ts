@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { StudentResultEntity } from "../../database/entities/student-result.entity";
 import { ClassAnalyticsView } from "../../database/views/class-analytics.view";
+import { PageParams } from "../../shared/types/page-param.type";
 
 @Injectable()
 export class StudentService {
@@ -13,8 +14,11 @@ export class StudentService {
 		private readonly classAnalyticsRepository: Repository<ClassAnalyticsView>,
 	) {}
 
-	async getStudentResults(studentId: string) {
-		return this.studentResultRepository
+	async getStudentResults(studentId: string, pagination: PageParams) {
+		const { page = 1, limit = 10 } = pagination;
+		const skip = (page - 1) * limit;
+
+		const query = this.studentResultRepository
 			.createQueryBuilder("sr")
 			.leftJoin("sr.exam", "test")
 			.leftJoin("test.class", "class")
@@ -29,7 +33,16 @@ export class StudentService {
 				'sr.correctRate AS "correctRate"',
 			])
 			.where("sr.student_id = :studentId", { studentId })
-			.getRawMany();
+			.orderBy("test.startedTime", "DESC")
+			.addOrderBy("sr.createdAt", "DESC");
+
+		const total = await query.getCount();
+		const data = await query.offset(skip).limit(limit).getRawMany();
+
+		return {
+			data,
+			metadata: { page, limit, totalPages: Math.ceil(total / limit) },
+		};
 	}
 
 	async getOverallTestResult(studentId: string) {
