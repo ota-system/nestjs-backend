@@ -27,6 +27,7 @@ export class TestEntity extends BaseEntity {
 		{
 			nullable: false,
 			onDelete: "CASCADE",
+			cascade: ["insert", "update", "remove"],
 		},
 	)
 	@JoinColumn({ name: "topic_id" })

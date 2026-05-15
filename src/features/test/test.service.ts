@@ -16,6 +16,7 @@ import { UserRole } from "../../shared/types/user-role.enum";
 import { checkTimesUp } from "../../shared/utils/checkTimesUp.util";
 import { AnalysisService } from "../analysis/analysis.service";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
+import { UpdateTestInfoReqDto } from "./dtos/update-test-info.req.dto";
 import { TestFraudListSchema } from "./schema/test-fraud.schema";
 import { FraudType, SubmitTestAnswer, TestFraudCache } from "./type";
 import { batchLoad } from "./utils/batch-load.util";
@@ -70,7 +71,7 @@ export class TestService {
 
 		const test = await this.testRepository.findOne({
 			where: { id: testId },
-			relations: { class: true },
+			relations: { class: true, topic: true },
 		});
 
 		if (!test) {
@@ -83,23 +84,52 @@ export class TestService {
 
 	async getDetailedTestInfo({
 		testId,
-		studentId,
+		userId,
+		role,
 	}: {
 		testId: string;
-		studentId: string;
+		userId: string;
+		role: UserRole;
 	}) {
 		const test = await this.testRepository.findOne({
 			where: { id: testId },
-			relations: ["topic", "class"],
+			relations: ["topic", "class", "class.teacher"],
 		});
 
 		if (!test) {
 			throw new BaseException(404, "TEST_NOT_FOUND");
 		}
 
+		if (role === UserRole.TEACHER && test.class.teacher.id === userId) {
+			if (checkTimesUp(test.startedTime, test.duration)) {
+				return {
+					id: test.id,
+					testName: test.testName,
+					startedTime: test.startedTime,
+					duration: test.duration,
+					totalQuestions: test.totalQuestions,
+					antiCheating: test.antiCheating,
+					topic: test.topic.topicName,
+					createdAt: test.createdAt,
+					timesUp: true,
+				};
+			}
+			return {
+				id: test.id,
+				testName: test.testName,
+				startedTime: test.startedTime,
+				duration: test.duration,
+				totalQuestions: test.totalQuestions,
+				antiCheating: test.antiCheating,
+				topic: test.topic.topicName,
+				createdAt: test.createdAt,
+				timesUp: false,
+			};
+		}
+
 		const enrollment = await this.studentClassRepository.findOne({
 			where: {
-				student: { id: studentId },
+				student: { id: userId },
 				class: { id: test.class.id },
 			},
 		});
@@ -111,10 +141,7 @@ export class TestService {
 		const testIds = [test.id];
 
 		const attemptedTestIds =
-			await this.studentResultService.getStudentAttemptedTests(
-				studentId,
-				testIds,
-			);
+			await this.studentResultService.getStudentAttemptedTests(userId, testIds);
 
 		return {
 			id: test.id,
@@ -402,5 +429,29 @@ export class TestService {
 					: 3600 * 24,
 			);
 		}
+	}
+
+	async updateTestInfo(
+		testId: string,
+		userId: string,
+		dto: UpdateTestInfoReqDto,
+	) {
+		const test = await this.testRepository.findOne({
+			where: { id: testId },
+			relations: ["class.teacher", "topic"],
+		});
+
+		if (!test) {
+			throw new BaseException(404, "TEST_NOT_FOUND");
+		}
+
+		if (test.class.teacher.id !== userId) {
+			throw new BaseException(403, "TEST_ACCESS_DENIED");
+		}
+
+		test.topic.topicName = dto.topicName;
+		Object.assign(test, dto);
+
+		return await this.testRepository.save(test);
 	}
 }
