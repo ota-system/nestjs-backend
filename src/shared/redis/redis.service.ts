@@ -162,4 +162,13 @@ export class RedisService {
 			Logger.error(`Redis SET error for key: ${key}`, err);
 		}
 	}
+
+	async getKeys(pattern: string): Promise<string[]> {
+		try {
+			return await this.redis.keys(pattern);
+		} catch (err) {
+			Logger.error(`Redis KEYS error for pattern: ${pattern}`, err);
+			return [];
+		}
+	}
 }

@@ -1,10 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { ChoiceEntity } from "../../database/entities/choice.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
 import { TestEntity } from "../../database/entities/test.entity";
+import { BaseException } from "../../shared/exception/base.exception";
 import { RedisService } from "../../shared/redis/redis.service";
-import { TestQuestionDto } from "./dtos/question-res.dto";
+import { QuestionType } from "../../shared/types/question-type.enum";
+import { UserRole } from "../../shared/types/user-role.enum";
+import { UpdateQuestionReqDto } from "../test/dtos/update-question.req.dto";
+import { QuestionDto, TestQuestionDto } from "./dtos/question-res.dto";
 import { TestQuestionSchema } from "./schema/test-question.schema";
 
 @Injectable()
@@ -16,13 +21,28 @@ export class QuestionService {
 		private readonly redisService: RedisService,
 	) {}
 
-	async getQuestionsForTest(test: TestEntity, page: number, limit: number) {
-		const cacheKey = `exam_questions:${test.id}:p${page}:l${limit}`;
+	async getQuestionsForTest({
+		test,
+		role,
+		page,
+		limit,
+	}: {
+		test: TestEntity;
+		role: string;
+		page: number;
+		limit: number;
+	}) {
+		let cacheKey: string;
+		if (role === UserRole.STUDENT) {
+			cacheKey = `exam_questions:${test.id}:p${page}:l${limit}`;
+		} else {
+			cacheKey = `exam_questions:${test.id}:role:${role}:p${page}:l${limit}`;
+		}
 
 		const cached = await this.redisService.getCache<TestQuestionDto>(
 			cacheKey,
 			TestQuestionSchema,
-		); //TODO: fix this bug
+		);
 		if (cached) return cached;
 
 		const [questions, totalQuestions] =
@@ -34,16 +54,35 @@ export class QuestionService {
 				order: { createdAt: "ASC" },
 			});
 
-		const data = questions.map((q) => ({
-			id: q.id,
-			question: q.question,
-			type: q.type,
-			level: q.level,
-			choices: (q.choices ?? []).map((c) => ({
-				id: c.id,
-				answer: c.answer,
-			})),
-		}));
+		let data: QuestionDto[];
+
+		if (role === UserRole.STUDENT) {
+			data = questions.map((q) => ({
+				id: q.id,
+				question: q.question,
+				type: q.type,
+				level: q.level,
+				choices: (q.choices ?? []).map((c) => ({
+					id: c.id,
+					answer: c.answer,
+				})),
+			}));
+		} else {
+			data = questions.map((q) => ({
+				id: q.id,
+				question: q.question,
+				type: q.type,
+				level: q.level,
+				choices: (q.choices ?? []).map((c) => ({
+					id: c.id,
+					answer: c.answer,
+				})),
+				answer:
+					q.type === QuestionType.FILL_IN_THE_BLANK
+						? q.answer!
+						: q.choices?.find((c) => c.isCorrect)?.id,
+			}));
+		}
 
 		const result: TestQuestionDto = { questions: data, totalQuestions };
 
@@ -57,5 +96,75 @@ export class QuestionService {
 		}
 
 		return result;
+	}
+
+	async updateQuestion(questionId: string, question: UpdateQuestionReqDto) {
+		const existingQuestion = await this.questionRepository.findOne({
+			where: { id: questionId },
+			relations: ["test", "choices"],
+		});
+
+		if (!existingQuestion) {
+			throw new BaseException(404, "QUESTION_NOT_FOUND");
+		}
+
+		existingQuestion.question = question.question;
+		existingQuestion.type = question.questionType;
+		existingQuestion.level = question.difficulty;
+
+		if (question.questionType === QuestionType.FILL_IN_THE_BLANK) {
+			existingQuestion.answer = question.answer;
+			if (existingQuestion.choices && existingQuestion.choices.length > 0) {
+				await this.questionRepository.manager
+					.getRepository(ChoiceEntity)
+					.delete({ question: { id: questionId } });
+			}
+		} else {
+			const newChoices = question.options!.map(
+				(option: { id: string; answer: string }) => {
+					const choice = new ChoiceEntity();
+					choice.answer = option.answer;
+					choice.isCorrect = option.id === question.answer;
+					choice.question = existingQuestion;
+					return choice;
+				},
+			);
+			await this.questionRepository.manager
+				.getRepository(ChoiceEntity)
+				.delete({ question: { id: questionId } });
+			existingQuestion.choices = newChoices;
+		}
+		await this.questionRepository.save(existingQuestion);
+
+		const testId = existingQuestion.test.id;
+		const keysToInvalidate = await this.redisService.getKeys(
+			`exam_questions:${testId}:*`,
+		);
+		for (const key of keysToInvalidate) {
+			await this.redisService.delCache(key);
+		}
+
+		return existingQuestion;
+	}
+
+	async deleteQuestion(questionId: string) {
+		const existingQuestion = await this.questionRepository.findOne({
+			where: { id: questionId },
+			relations: ["test", "choices"],
+		});
+
+		if (!existingQuestion) {
+			throw new BaseException(404, "QUESTION_NOT_FOUND");
+		}
+
+		await this.questionRepository.delete({ id: questionId });
+
+		const testId = existingQuestion.test.id;
+		const keysToInvalidate = await this.redisService.getKeys(
+			`exam_questions:${testId}:*`,
+		);
+		for (const key of keysToInvalidate) {
+			await this.redisService.delCache(key);
+		}
 	}
 }

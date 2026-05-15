@@ -24,6 +24,9 @@ export class QuestionDto {
 	@Expose()
 	@Type(() => ChoiceDto)
 	choices!: ChoiceDto[];
+
+	@Expose()
+	answer?: string;
 }
 
 export class TestQuestionDto {

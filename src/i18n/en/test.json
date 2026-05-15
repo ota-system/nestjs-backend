@@ -7,5 +7,8 @@
 	"GET_EXAM_SUCCESS": "Get exam detail successful",
 	"GET_QUESTIONS_SUCCESS": "Get exam questions successful",
 	"WINDOW_VISIBILITY_CHANGED": "System detected that you have switched to another tab or minimized the window",
-	"FULLSCREEN_EXIT_DETECTED": "System detected that you have exited full screen mode"
+	"FULLSCREEN_EXIT_DETECTED": "System detected that you have exited full screen mode",
+	"UPDATE_QUESTION_SUCCESS": "Question updated successfully",
+	"DELETE_QUESTION_SUCCESS": "Question deleted successfully",
+	"UPDATE_TEST_INFO_SUCCESS": "Test information updated successfully"
 }

@@ -11,7 +11,7 @@ import {
 import { Difficulty } from "../../../shared/interface/QuestionObject";
 import { QuestionType } from "../../../shared/types/question-type.enum";
 
-class QuestionDto {
+export class QuestionDto {
 	@IsString()
 	@IsNotEmpty()
 	question!: string;

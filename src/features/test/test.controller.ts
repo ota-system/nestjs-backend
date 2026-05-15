@@ -1,9 +1,11 @@
 import {
 	Body,
 	Controller,
+	Delete,
 	Get,
 	Param,
 	ParseBoolPipe,
+	Patch,
 	Post,
 	Query,
 	UseInterceptors,
@@ -29,6 +31,9 @@ import { CreateTestFraudReqDto } from "./dtos/create-test-fraud.req.dto";
 import { SubmitTestRequestDto } from "./dtos/submit-test.req.dto";
 import { SubmitTestResponseDto } from "./dtos/submit-test.res.dto";
 import { ExamResponseDto } from "./dtos/tesst-res.dto";
+import { TestInfoResDto } from "./dtos/test-info.res.dto";
+import { UpdateQuestionReqDto } from "./dtos/update-question.req.dto";
+import { UpdateTestInfoReqDto } from "./dtos/update-test-info.req.dto";
 import { TestService } from "./test.service";
 import { FraudType } from "./type";
 
@@ -70,7 +75,8 @@ export class TestController {
 		if (detailed) {
 			const test = await this.testService.getDetailedTestInfo({
 				testId,
-				studentId: user.sub,
+				userId: user.sub,
+				role: user.role,
 			});
 			return BaseResponse.ok(
 				test,
@@ -109,11 +115,13 @@ export class TestController {
 			});
 		}
 
-		const response = await this.questionService.getQuestionsForTest(
+		const response = await this.questionService.getQuestionsForTest({
 			test,
-			query.page,
-			query.limit,
-		);
+			role: user.role,
+			page: query.page,
+			limit: query.limit,
+		});
+
 		return BaseResponse.ok(
 			plainToInstance(TestQuestionDto, response, {
 				excludeExtraneousValues: true,
@@ -200,5 +208,74 @@ export class TestController {
 		}
 
 		return BaseResponse.ok(null, await i18n.t("test.FULLSCREEN_EXIT_DETECTED"));
+	}
+
+	@Patch(":testId/questions/:questionId")
+	@Auth(UserRole.TEACHER)
+	async updateQuestion(
+		@Param("testId") testId: string,
+		@Param("questionId") questionId: string,
+		@User() user: JwtPayload,
+		@Body() question: UpdateQuestionReqDto,
+		@I18n() i18n: I18nContext,
+	) {
+		const test = await this.testService.getTestInfo(
+			testId,
+			user.sub,
+			user.role,
+		);
+
+		const updatedQuestion = await this.questionService.updateQuestion(
+			questionId,
+			question,
+		);
+
+		return BaseResponse.ok(
+			plainToInstance(TestQuestionDto, updatedQuestion, {
+				excludeExtraneousValues: true,
+			}),
+			await i18n.t("test.UPDATE_QUESTION_SUCCESS"),
+		);
+	}
+
+	@Delete(":testId/questions/:questionId")
+	@Auth(UserRole.TEACHER)
+	async deleteQuestion(
+		@Param("testId") testId: string,
+		@Param("questionId") questionId: string,
+		@User() user: JwtPayload,
+		@I18n() i18n: I18nContext,
+	) {
+		const test = await this.testService.getTestInfo(
+			testId,
+			user.sub,
+			user.role,
+		);
+
+		await this.questionService.deleteQuestion(questionId);
+
+		return BaseResponse.ok(null, await i18n.t("test.DELETE_QUESTION_SUCCESS"));
+	}
+
+	@Patch(":testId")
+	@Auth(UserRole.TEACHER)
+	async updateTestInfo(
+		@Param("testId") testId: string,
+		@User() user: JwtPayload,
+		@Body() testInfo: UpdateTestInfoReqDto,
+		@I18n() i18n: I18nContext,
+	) {
+		const updatedTest = await this.testService.updateTestInfo(
+			testId,
+			user.sub,
+			testInfo,
+		);
+
+		return BaseResponse.ok(
+			plainToInstance(TestInfoResDto, updatedTest, {
+				excludeExtraneousValues: true,
+			}),
+			await i18n.t("test.UPDATE_TEST_INFO_SUCCESS"),
+		);
 	}
 }
