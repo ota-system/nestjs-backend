@@ -32,5 +32,12 @@
 	"TEST_ACCESS_DENIED": "Bạn không có quyền truy cập bài thi này.",
 	"RESOURCE_ACCESS_DENIED": "Bạn không có quyền truy cập tài nguyên này.",
 	"STUDENT_RESULT_NOT_FOUND": "Không tìm thấy kết quả bài thi.",
-	"QUESTION_NOT_FOUND": "Không tìm thấy câu hỏi."
+	"QUESTION_NOT_FOUND": "Không tìm thấy câu hỏi.",
+	"PDF_CONTENT_TOO_SHORT_OR_SCANNED": "Nội dung PDF quá ngắn hoặc có vẻ là ảnh quét. Vui lòng cung cấp tệp PDF dạng văn bản.",
+	"TOKEN_LIMIT_EXCEEDED": "Tài liệu quá lớn và vượt quá giới hạn ngữ cảnh của AI. Vui lòng cung cấp tệp PDF ngắn hơn.",
+	"PDF_PARSING_FAILED": "Không thể trích xuất văn bản từ tệp PDF.",
+	"FILE_REQUIRED": "Yêu cầu tệp PDF.",
+	"INVALID_FILE_TYPE_MUST_BE_PDF": "Định dạng tệp không hợp lệ. Chỉ chấp nhận tệp PDF.",
+	"INTERNAL_ERROR": "Đã xảy ra lỗi máy chủ nội bộ.",
+	"FILE_TOO_LARGE": "Tệp quá lớn. Dung lượng tối đa cho phép là 20MB."
 }

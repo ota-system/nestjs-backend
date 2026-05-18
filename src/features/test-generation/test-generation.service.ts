@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ChoiceEntity } from "../../database/entities/choice.entity";
@@ -6,18 +6,40 @@ import { ClassEntity } from "../../database/entities/class.entity";
 import { QuestionEntity } from "../../database/entities/question.entity";
 import { TestEntity } from "../../database/entities/test.entity";
 import { TopicEntity } from "../../database/entities/topic.entity";
+import { BaseException } from "../../shared/exception/base.exception";
+import { AiTokenService } from "../../shared/services/ai-token.service";
+import { PdfParserService } from "../../shared/services/pdf-parser.service";
 import { QuestionType } from "../../shared/types/question-type.enum";
 import { SavedTestRequestDto } from "./dtos/saved-test.req.dto";
 
 @Injectable()
 export class TestGenerationService {
+	private readonly logger = new Logger(TestGenerationService.name);
 	constructor(
 		@InjectRepository(TestEntity)
 		private readonly testRepository: Repository<TestEntity>,
 
 		@InjectRepository(ClassEntity)
 		private readonly classRepository: Repository<ClassEntity>,
+
+		private readonly pdfParserService: PdfParserService,
+		private readonly aiTokenService: AiTokenService,
 	) {}
+
+	async extractTextFromPdf(fileBuffer: Buffer): Promise<string> {
+		const text = await this.pdfParserService.parse(fileBuffer);
+
+		if (!text || text.length < 50) {
+			throw new BaseException(400, "PDF_CONTENT_TOO_SHORT_OR_SCANNED");
+		}
+
+		const tokens = this.aiTokenService.estimateTokenCount(text);
+		if (tokens > 15000) {
+			throw new BaseException(400, "TOKEN_LIMIT_EXCEEDED");
+		}
+
+		return text;
+	}
 
 	async saveAIGeneratedTest(dto: SavedTestRequestDto): Promise<boolean> {
 		const {
