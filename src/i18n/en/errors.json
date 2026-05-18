@@ -32,5 +32,12 @@
 	"TEST_ACCESS_DENIED": "You do not have permission to access this test.",
 	"RESOURCE_ACCESS_DENIED": "You don't have permission to access this resource.",
 	"STUDENT_RESULT_NOT_FOUND": "Student result not found.",
-	"QUESTION_NOT_FOUND": "Question not found."
+	"QUESTION_NOT_FOUND": "Question not found.",
+	"PDF_CONTENT_TOO_SHORT_OR_SCANNED": "The PDF content is too short or appears to be a scanned image. Please provide a text-based PDF.",
+	"TOKEN_LIMIT_EXCEEDED": "The document is too large and exceeds the AI context limit. Please provide a shorter PDF.",
+	"PDF_PARSING_FAILED": "Failed to extract text from the PDF file.",
+	"FILE_REQUIRED": "A PDF file is required.",
+	"INVALID_FILE_TYPE_MUST_BE_PDF": "Invalid file type. Only PDF files are allowed.",
+	"INTERNAL_ERROR": "An internal server error occurred.",
+	"FILE_TOO_LARGE": "The file is too large. Maximum size allowed is 20MB."
 }
